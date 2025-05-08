@@ -1,12 +1,22 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Experience } from "@/types/database";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,8 +29,10 @@ export default function ExperiencePage() {
   const [experienceList, setExperienceList] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
-  
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(
+    null,
+  );
+
   const [formData, setFormData] = useState({
     company: "",
     position: "",
@@ -82,16 +94,18 @@ export default function ExperiencePage() {
     setDialogOpen(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSwitchChange = (checked: boolean) => {
-    setFormData((prev) => ({ 
-      ...prev, 
+    setFormData((prev) => ({
+      ...prev,
       current_job: checked,
-      end_date: checked ? "" : prev.end_date
+      end_date: checked ? "" : prev.end_date,
     }));
   };
 
@@ -130,13 +144,11 @@ export default function ExperiencePage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this experience entry?")) return;
+    if (!confirm("Are you sure you want to delete this experience entry?"))
+      return;
 
     try {
-      const { error } = await supabase
-        .from("experience")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("experience").delete().eq("id", id);
 
       if (error) throw error;
       toast.success("Experience entry deleted successfully");
@@ -146,12 +158,20 @@ export default function ExperiencePage() {
     }
   };
 
-  function formatDateRange(startDate?: string | null, endDate?: string | null, currentJob?: boolean | null) {
+  function formatDateRange(
+    startDate?: string | null,
+    endDate?: string | null,
+    currentJob?: boolean | null,
+  ) {
     if (!startDate) return "";
 
     const start = startDate ? format(parseISO(startDate), "MMM yyyy") : "";
-    const end = currentJob ? "Present" : endDate ? format(parseISO(endDate), "MMM yyyy") : "";
-    
+    const end = currentJob
+      ? "Present"
+      : endDate
+        ? format(parseISO(endDate), "MMM yyyy")
+        : "";
+
     return `${start} - ${end}`;
   }
 
@@ -159,7 +179,7 @@ export default function ExperiencePage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
           <p className="mt-4">Loading experience data...</p>
         </div>
       </div>
@@ -199,12 +219,16 @@ export default function ExperiencePage() {
                   <div>
                     <div>{experience.position}</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {formatDateRange(experience.start_date, experience.end_date, experience.current_job)}
+                      {formatDateRange(
+                        experience.start_date,
+                        experience.end_date,
+                        experience.current_job,
+                      )}
                     </div>
                   </div>
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="font-medium">{experience.company}</div>
                 {experience.location && (
@@ -214,16 +238,26 @@ export default function ExperiencePage() {
                   </div>
                 )}
                 {experience.description && (
-                  <p className="mt-2 text-sm whitespace-pre-line">{experience.description}</p>
+                  <p className="mt-2 text-sm whitespace-pre-line">
+                    {experience.description}
+                  </p>
                 )}
               </CardContent>
-              
+
               <CardFooter className="flex justify-end border-t p-4">
                 <div className="flex gap-2">
-                  <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(experience)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleOpenDialog(experience)}
+                  >
                     <Pencil size={18} />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(experience.id)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDelete(experience.id)}
+                  >
                     <Trash2 size={18} />
                   </Button>
                 </div>
@@ -301,7 +335,7 @@ export default function ExperiencePage() {
             </div>
 
             <div className="flex items-center space-x-2">
-              <Switch 
+              <Switch
                 id="current_job"
                 checked={formData.current_job}
                 onCheckedChange={handleSwitchChange}
@@ -322,7 +356,11 @@ export default function ExperiencePage() {
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit">

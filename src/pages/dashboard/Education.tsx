@@ -1,12 +1,22 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Education } from "@/types/database";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,8 +28,10 @@ export default function EducationPage() {
   const [educationList, setEducationList] = useState<Education[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
-  
+  const [editingEducation, setEditingEducation] = useState<Education | null>(
+    null,
+  );
+
   const [formData, setFormData] = useState({
     institution: "",
     degree: "",
@@ -78,7 +90,9 @@ export default function EducationPage() {
     setDialogOpen(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -118,13 +132,11 @@ export default function EducationPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this education entry?")) return;
+    if (!confirm("Are you sure you want to delete this education entry?"))
+      return;
 
     try {
-      const { error } = await supabase
-        .from("education")
-        .delete()
-        .eq("id", id);
+      const { error } = await supabase.from("education").delete().eq("id", id);
 
       if (error) throw error;
       toast.success("Education entry deleted successfully");
@@ -139,7 +151,7 @@ export default function EducationPage() {
 
     const start = startDate ? format(parseISO(startDate), "MMM yyyy") : "";
     const end = endDate ? format(parseISO(endDate), "MMM yyyy") : "Present";
-    
+
     return `${start} - ${end}`;
   }
 
@@ -147,7 +159,7 @@ export default function EducationPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-700 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
           <p className="mt-4">Loading education data...</p>
         </div>
       </div>
@@ -187,12 +199,15 @@ export default function EducationPage() {
                   <div>
                     <div>{education.institution}</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {formatDateRange(education.start_date, education.end_date)}
+                      {formatDateRange(
+                        education.start_date,
+                        education.end_date,
+                      )}
                     </div>
                   </div>
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent>
                 <div className="font-medium">{education.degree}</div>
                 {education.field_of_study && (
@@ -204,13 +219,21 @@ export default function EducationPage() {
                   <p className="mt-2 text-sm">{education.description}</p>
                 )}
               </CardContent>
-              
+
               <CardFooter className="flex justify-end border-t p-4">
                 <div className="flex gap-2">
-                  <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(education)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleOpenDialog(education)}
+                  >
                     <Pencil size={18} />
                   </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDelete(education.id)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => handleDelete(education.id)}
+                  >
                     <Trash2 size={18} />
                   </Button>
                 </div>
@@ -237,6 +260,7 @@ export default function EducationPage() {
                 onChange={handleChange}
                 placeholder="University or School Name"
                 required
+                className="bg-gray-100 text-black text-xs px-2.5 py-0.5 rounded-full"
               />
             </div>
 
@@ -249,6 +273,7 @@ export default function EducationPage() {
                 onChange={handleChange}
                 placeholder="Bachelor of Science, Certificate, etc."
                 required
+                className="bg-gray-100 text-black text-xs px-2.5 py-0.5 rounded-full"
               />
             </div>
 
@@ -260,6 +285,7 @@ export default function EducationPage() {
                 value={formData.field_of_study}
                 onChange={handleChange}
                 placeholder="Computer Science, Business, etc."
+                className="bg-gray-100 text-black text-xs px-2.5 py-0.5 rounded-full"
               />
             </div>
 
@@ -296,11 +322,16 @@ export default function EducationPage() {
                 onChange={handleChange}
                 placeholder="Notable achievements, activities, GPA, etc."
                 rows={3}
+                className="bg-gray-100 text-black text-xs px-2.5 py-0.5 rounded-full"
               />
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit">
