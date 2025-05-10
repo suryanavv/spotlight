@@ -65,15 +65,15 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-8 bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-300">
-      <h2 className="text-2xl font-bold text-center mb-8 text-foreground">
+    <div className="w-full max-w-md mx-auto p-8 rounded-lg border bg-card text-card-foreground shadow-sm">
+      <h2 className="text-2xl font-bold text-center mb-8">
         {mode === "login" ? "Welcome Back" : "Create Account"}
       </h2>
 
       <Button
         type="button"
         variant="outline"
-        className="w-full mb-4 flex items-center justify-center gap-2 h-12 rounded-xl border-border/40 shadow-sm hover:shadow-md transition-all duration-200"
+        className="w-full flex items-center justify-center gap-2 h-12"
         onClick={handleGoogleSignIn}
         disabled={loading}
       >
@@ -106,8 +106,8 @@ export default function AuthForm() {
       </Button>
 
       <div className="relative my-8">
-        <Separator className="bg-border/40" />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-muted-foreground">
+        <Separator />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-4 text-sm text-muted-foreground">
           OR
         </span>
       </div>
@@ -121,17 +121,15 @@ export default function AuthForm() {
             >
               Full Name
             </label>
-            <div className="premium-input rounded-xl overflow-hidden">
-              <Input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
-                required
-                className="w-full border-none shadow-none focus-visible:ring-0 h-12 bg-transparent"
-              />
-            </div>
+            <Input
+              id="fullName"
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Enter your full name"
+              required
+              className="w-full h-12"
+            />
           </div>
         )}
 
@@ -142,17 +140,15 @@ export default function AuthForm() {
           >
             Email
           </label>
-          <div className="premium-input rounded-xl overflow-hidden">
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              required
-              className="w-full border-none shadow-none focus-visible:ring-0 h-12 bg-transparent"
-            />
-          </div>
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            required
+            className="w-full h-12"
+          />
         </div>
 
         <div className="space-y-2">
@@ -162,7 +158,7 @@ export default function AuthForm() {
           >
             Password
           </label>
-          <div className="premium-input rounded-xl overflow-hidden relative">
+          <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
@@ -170,7 +166,7 @@ export default function AuthForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              className="w-full border-none shadow-none focus-visible:ring-0 h-12 pr-10 bg-transparent"
+              className="w-full h-12 pr-10"
             />
             <button
               type="button"
@@ -184,10 +180,17 @@ export default function AuthForm() {
 
         <Button
           type="submit"
-          className="w-full h-12 mt-6 rounded-lg bg-black text-white font-medium text-base shadow-sm hover:shadow-md transition-all duration-300"
+          className="w-full"
+          variant="default"
           disabled={loading}
         >
-          {loading ? "Loading..." : mode === "login" ? "Sign In" : "Sign Up"}
+          {loading ? (
+            <div className="flex items-center justify-center">
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : (
+            mode === "login" ? "Sign In" : "Sign Up"
+          )}
         </Button>
       </form>
 
@@ -196,13 +199,14 @@ export default function AuthForm() {
           {mode === "login"
             ? "Don't have an account?"
             : "Already have an account?"}
-          <button
+          <Button
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="ml-2 text-black hover:text-gray-700 font-medium transition-colors"
+            variant="link"
+            className="p-0 h-auto font-medium"
             type="button"
           >
             {mode === "login" ? "Sign Up" : "Sign In"}
-          </button>
+          </Button>
         </p>
       </div>
     </div>

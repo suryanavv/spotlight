@@ -42,8 +42,9 @@ const Index = () => {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Button
-                    variant="premium"
+                    variant="default"
                     size="lg"
+                    className="bg-black text-white hover:bg-black/90"
                     onClick={() => navigate(user ? "/dashboard" : "/auth")}
                   >
                     {user ? "Go to Dashboard" : "Get Started"}
@@ -197,8 +198,9 @@ const Index = () => {
                 portfolios and advance their careers.
               </p>
               <Button
-                variant="premium"
+                variant="default"
                 size="lg"
+                className="bg-black text-white hover:bg-black/90"
                 onClick={() => navigate(user ? "/dashboard" : "/auth")}
               >
                 {user ? "Go to Dashboard" : "Create Your Portfolio"}

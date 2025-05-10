@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -279,8 +278,13 @@ export default function ProfileSettings() {
             </div>
             
             <div className="flex justify-end">
-              <Button type="submit" disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
+              <Button
+                type="submit"
+                variant="default"
+                disabled={uploadingAvatar}
+                className="w-full"
+              >
+                {uploadingAvatar ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </form>

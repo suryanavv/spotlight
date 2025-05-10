@@ -170,7 +170,7 @@ export default function EducationPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Education</h1>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button variant="default" onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-4 w-4" />
           Add Education
         </Button>

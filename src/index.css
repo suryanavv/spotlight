@@ -28,20 +28,11 @@
     --destructive: 0 0% 0%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 0%;
+    --border: #e9e9e9;
+    --input: #e9e9e9;
+    --ring: #000000;
 
-    --radius: 0.375rem;
-
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 0%;
-    --sidebar-primary: 0 0% 0%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 98%;
-    --sidebar-accent-foreground: 0 0% 0%;
-    --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 0 0% 0%;
+    --radius: 0.5rem;
   }
 }
 
@@ -49,13 +40,9 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-white text-black font-sans;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground;
   }
-
   h1,
   h2,
   h3,
@@ -64,104 +51,70 @@
   h6 {
     @apply font-medium tracking-tight;
   }
+}
 
-  /* Clean UI Styles */
-  .premium-card {
-    @apply bg-white rounded-sm shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md;
-  }
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  .premium-input {
-    @apply bg-white border-gray-200 rounded-sm focus:ring-0 focus:border-black transition-all duration-200;
-  }
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 4px;
+}
 
-  .premium-button {
-    @apply rounded-sm font-medium transition-all duration-200 shadow-none hover:bg-gray-50 active:scale-[0.98];
-  }
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+}
 
-  .premium-shimmer {
-    @apply bg-gradient-to-r from-transparent via-gray-100 to-transparent bg-[length:200%_100%] animate-shimmer;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
 
-  .premium-hover {
-    @apply transition-all duration-200 hover:shadow-md;
+/* Animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  .premium-section {
-    @apply py-12 px-4 sm:px-6 lg:px-8;
-  }
+.fade-in {
+  animation: fade-in 0.5s ease-in-out;
+}
 
-  /* Magic UI inspired styles */
-  .magic-card {
-    @apply bg-white rounded-sm border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200;
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-  .magic-button {
-    @apply rounded-sm font-medium transition-all duration-200 shadow-none hover:bg-gray-50 active:scale-[0.98];
-  }
+.slide-up {
+  animation: slide-up 0.5s ease-in-out;
+}
 
-  .magic-input {
-    @apply bg-white border-gray-200 rounded-sm focus:ring-0 focus:border-black transition-all duration-200;
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
   }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
 
-  /* Magic UI Rainbow Button */
-  .magic-rainbow-button {
-    @apply relative inline-flex h-9 items-center justify-center rounded-sm bg-white px-3 py-1.5 text-sm font-medium text-black shadow-sm transition-all duration-200 hover:shadow-md active:scale-[0.98] overflow-hidden;
-  }
-
-  .magic-rainbow-button::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    z-index: -1;
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      #000000 0deg,
-      #333333 72deg,
-      #666666 144deg,
-      #999999 216deg,
-      #cccccc 288deg,
-      #000000 360deg
-    );
-    animation: magic-rainbow-rotate 4s linear infinite;
-    border-radius: 0.125rem;
-  }
-
-  @keyframes magic-rainbow-rotate {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
-  /* Notion-like styles */
-  .notion-heading {
-    @apply font-medium tracking-tight text-black;
-  }
-
-  .notion-text {
-    @apply text-gray-700 leading-relaxed;
-  }
-
-  .notion-card {
-    @apply bg-white rounded-sm border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200;
-  }
-
-  .notion-button {
-    @apply bg-white text-black border border-gray-200 rounded-sm hover:bg-gray-50 transition-all duration-200;
-  }
-
-  /* Subtle animations */
-  .fade-in {
-    @apply animate-fade-in;
-  }
-
-  .slide-up {
-    @apply animate-slide-up;
-  }
-
-  .slide-in-right {
-    @apply animate-slide-in-right;
-  }
+.slide-in-right {
+  animation: slide-in-right 0.5s ease-in-out;
 }

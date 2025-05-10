@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -50,8 +51,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [user, loading, navigate]);
 
   const handleLogout = async () => {
-    await signOut();
-    navigate("/auth");
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+      navigate("/auth");
+    } catch (error) {
+      toast.error("Error signing out");
+    }
   };
 
   if (loading) {

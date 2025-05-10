@@ -190,7 +190,7 @@ export default function ExperiencePage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Work Experience</h1>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => handleOpenDialog()} variant="default">
           <Plus className="mr-2 h-4 w-4" />
           Add Experience
         </Button>
@@ -206,7 +206,7 @@ export default function ExperiencePage() {
             <p className="text-muted-foreground mt-2">
               Add your work experience to showcase your professional journey
             </p>
-            <Button className="mt-4" onClick={() => handleOpenDialog()}>
+            <Button className="mt-4" variant="default" onClick={() => handleOpenDialog()}>
               <Plus className="mr-2 h-4 w-4" />
               Add Experience
             </Button>
@@ -363,7 +363,7 @@ export default function ExperiencePage() {
               >
                 Cancel
               </Button>
-              <Button type="submit">
+              <Button type="submit" variant="default">
                 {editingExperience ? "Update" : "Add"} Experience
               </Button>
             </div>

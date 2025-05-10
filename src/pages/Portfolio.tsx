@@ -158,7 +158,7 @@ export default function Portfolio() {
 
           <div className="flex justify-center mt-4 space-x-3">
             {profile.website && (
-              <Button size="icon" variant="premium" asChild>
+              <Button size="icon" variant="secondary" asChild>
                 <a
                   href={profile.website}
                   target="_blank"
@@ -170,7 +170,7 @@ export default function Portfolio() {
               </Button>
             )}
             {profile.github && (
-              <Button size="icon" variant="premium" asChild>
+              <Button size="icon" variant="secondary" asChild>
                 <a
                   href={profile.github}
                   target="_blank"
@@ -182,7 +182,7 @@ export default function Portfolio() {
               </Button>
             )}
             {profile.linkedin && (
-              <Button size="icon" variant="premium" asChild>
+              <Button size="icon" variant="secondary" asChild>
                 <a
                   href={profile.linkedin}
                   target="_blank"
@@ -194,7 +194,7 @@ export default function Portfolio() {
               </Button>
             )}
             {profile.twitter && (
-              <Button size="icon" variant="premium" asChild>
+              <Button size="icon" variant="secondary" asChild>
                 <a
                   href={profile.twitter}
                   target="_blank"
@@ -374,7 +374,7 @@ export default function Portfolio() {
                   {profile.website && (
                     <Button
                       size="icon"
-                      className="bg-white/10 hover:bg-white/20 text-white"
+                      variant="secondary"
                       asChild
                     >
                       <a
@@ -390,7 +390,7 @@ export default function Portfolio() {
                   {profile.github && (
                     <Button
                       size="icon"
-                      className="bg-white/10 hover:bg-white/20 text-white"
+                      variant="secondary"
                       asChild
                     >
                       <a
@@ -406,7 +406,7 @@ export default function Portfolio() {
                   {profile.linkedin && (
                     <Button
                       size="icon"
-                      className="bg-white/10 hover:bg-white/20 text-white"
+                      variant="secondary"
                       asChild
                     >
                       <a
@@ -422,7 +422,7 @@ export default function Portfolio() {
                   {profile.twitter && (
                     <Button
                       size="icon"
-                      className="bg-white/10 hover:bg-white/20 text-white"
+                      variant="secondary"
                       asChild
                     >
                       <a
@@ -626,7 +626,7 @@ export default function Portfolio() {
                 {profile.website && (
                   <Button
                     size="icon"
-                    className="bg-gray-800 hover:bg-gray-700 text-white rounded-full"
+                    variant="secondary"
                     asChild
                   >
                     <a
@@ -642,7 +642,7 @@ export default function Portfolio() {
                 {profile.github && (
                   <Button
                     size="icon"
-                    className="bg-gray-800 hover:bg-gray-700 text-white rounded-full"
+                    variant="secondary"
                     asChild
                   >
                     <a
@@ -658,7 +658,7 @@ export default function Portfolio() {
                 {profile.linkedin && (
                   <Button
                     size="icon"
-                    className="bg-gray-800 hover:bg-gray-700 text-white rounded-full"
+                    variant="secondary"
                     asChild
                   >
                     <a
@@ -674,7 +674,7 @@ export default function Portfolio() {
                 {profile.twitter && (
                   <Button
                     size="icon"
-                    className="bg-gray-800 hover:bg-gray-700 text-white rounded-full"
+                    variant="secondary"
                     asChild
                   >
                     <a
@@ -878,8 +878,7 @@ export default function Portfolio() {
                   {profile.website && (
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="border-white/30 text-white hover:bg-white/10"
+                      variant="secondary"
                       asChild
                     >
                       <a
@@ -894,8 +893,7 @@ export default function Portfolio() {
                   {profile.linkedin && (
                     <Button
                       size="sm"
-                      variant="outline"
-                      className="border-white/30 text-white hover:bg-white/10"
+                      variant="secondary"
                       asChild
                     >
                       <a

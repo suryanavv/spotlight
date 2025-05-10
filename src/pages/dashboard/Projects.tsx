@@ -199,7 +199,7 @@ export default function Projects() {
     <div className="space-y-6">
       <div className="flex justify-between items-center pb-4 border-b border-gray-100">
         <h1 className="text-3xl font-extrabold text-black tracking-tight mb-1">Projects</h1>
-        <Button variant="premium" onClick={() => handleOpenDialog()}>
+        <Button variant="default" onClick={() => handleOpenDialog()}>
           <Plus className="mr-2 h-5 w-5" /> Add Project
         </Button>
       </div>
@@ -287,14 +287,14 @@ export default function Projects() {
                 </div>
                 <div className="flex gap-2">
                   <Button
-                    variant="premium"
+                    variant="secondary"
                     className="w-full"
                     onClick={() => handleOpenDialog(project)}
                   >
                     <Pencil className="mr-2 h-4 w-4" /> Edit
                   </Button>
                   <Button
-                    variant="premium"
+                    variant="destructive"
                     className="w-full"
                     onClick={() => handleDelete(project.id)}
                   >
@@ -407,9 +407,9 @@ export default function Projects() {
                 Cancel
               </Button>
               <Button
-                variant="premium"
+                type="submit"
+                variant="default"
                 className="w-full"
-                onClick={handleSubmit}
                 disabled={uploadingImage}
               >
                 {editingProject ? "Save Changes" : "Add Project"}

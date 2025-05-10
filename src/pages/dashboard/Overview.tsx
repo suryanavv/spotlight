@@ -104,7 +104,7 @@ export default function Overview() {
         </div>
         <Button
           onClick={() => navigate(`/portfolio/${user?.id}`)}
-          variant="premium"
+          variant="default"
           className="flex items-center gap-2"
         >
           <Share2 size={16} />
@@ -160,7 +160,7 @@ export default function Overview() {
                 </p>
                 <p className="text-gray-500 text-sm mt-1">Total entries</p>
                 <Button
-                  variant="premium"
+                  variant="default"
                   className="w-full mt-4 text-sm"
                   onClick={() => navigate(stat.path)}
                 >

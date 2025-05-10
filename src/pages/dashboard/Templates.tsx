@@ -107,12 +107,12 @@ export default function Templates() {
             </CardContent>
             <CardFooter className="border-t p-4">
               {selectedTemplate === template.id ? (
-                <Button variant="premium" className="w-full" disabled>
+                <Button variant="default" className="w-full" disabled>
                   <Check className="mr-2 h-4 w-4" /> Selected
                 </Button>
               ) : (
                 <Button
-                  variant="premium"
+                  variant="default"
                   className="w-full"
                   onClick={() => handleTemplateSelect(template.id)}
                   disabled={loading}

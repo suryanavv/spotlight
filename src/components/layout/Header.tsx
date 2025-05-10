@@ -12,14 +12,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Share2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 export default function Header() {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate("/auth");
+    try {
+      await signOut();
+      toast.success("Signed out successfully");
+      navigate("/auth");
+    } catch (error) {
+      toast.error("Error signing out");
+    }
   };
 
   return (
@@ -108,7 +114,7 @@ export default function Header() {
               </DropdownMenu>
             </>
           ) : (
-            <Button variant="premium" onClick={() => navigate("/auth")}>
+            <Button variant="default" onClick={() => navigate("/auth")}>
               Sign In
             </Button>
           )}
