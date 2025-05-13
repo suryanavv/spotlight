@@ -114,7 +114,8 @@ export default function Header() {
               </DropdownMenu>
             </>
           ) : (
-            <Button variant="default" onClick={() => navigate("/auth")}>
+            <Button
+            size="sm" onClick={() => navigate("/auth")}>
               Sign In
             </Button>
           )}

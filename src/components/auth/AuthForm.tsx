@@ -72,8 +72,7 @@ export default function AuthForm() {
 
       <Button
         type="button"
-        variant="outline"
-        className="w-full flex items-center justify-center gap-2 h-12"
+        className="w-full"
         onClick={handleGoogleSignIn}
         disabled={loading}
       >
