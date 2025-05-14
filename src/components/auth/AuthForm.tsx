@@ -1,33 +1,38 @@
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+"use client"
 
-type AuthMode = "login" | "signup";
+import type React from "react"
+
+import { useState } from "react"
+import { supabase } from "@/integrations/supabase/client"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
+import { Eye, EyeOff } from 'lucide-react'
+import { Separator } from "@/components/ui/separator"
+import { motion } from "framer-motion"
+
+type AuthMode = "login" | "signup"
 
 export default function AuthForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [mode, setMode] = useState<AuthMode>("login");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [mode, setMode] = useState<AuthMode>("login")
+  const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
-        });
-        if (error) throw error;
-        toast.success("Logged in successfully!");
+        })
+        if (error) throw error
+        toast.success("Logged in successfully!")
       } else {
         const { error } = await supabase.auth.signUp({
           email,
@@ -37,18 +42,16 @@ export default function AuthForm() {
               full_name: fullName,
             },
           },
-        });
-        if (error) throw error;
-        toast.success(
-          "Signed up successfully! Check your email for confirmation.",
-        );
+        })
+        if (error) throw error
+        toast.success("Signed up successfully! Check your email for confirmation.")
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred");
+      toast.error(error.message || "An error occurred")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGoogleSignIn = async () => {
     try {
@@ -57,31 +60,32 @@ export default function AuthForm() {
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
-      });
-      if (error) throw error;
+      })
+      if (error) throw error
     } catch (error: any) {
-      toast.error(error.message || "An error occurred with Google sign in");
+      toast.error(error.message || "An error occurred with Google sign in")
     }
-  };
+  }
 
   return (
-    <div className="w-full max-w-md mx-auto p-8 rounded-lg border bg-card text-card-foreground shadow-sm">
-      <h2 className="text-2xl font-bold text-center mb-8">
-        {mode === "login" ? "Welcome Back" : "Create Account"}
+    <motion.div
+      className="mx-auto w-full max-w-sm rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <h2 className="mb-5 text-center text-lg font-medium text-black">
+        {mode === "login" ? "Welcome back" : "Create your account"}
       </h2>
 
       <Button
         type="button"
-        className="w-full"
+        className="w-full rounded-md border border-gray-200 bg-white text-xs text-black hover:bg-gray-50"
         onClick={handleGoogleSignIn}
         disabled={loading}
+        variant="outline"
       >
-        <svg
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg viewBox="0 0 24 24" width="16" height="16" xmlns="http://www.w3.org/2000/svg" className="mr-2">
           <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
             <path
               fill="#4285F4"
@@ -101,23 +105,20 @@ export default function AuthForm() {
             />
           </g>
         </svg>
-        <span className="font-medium">Continue with Google</span>
+        <span className="font-normal">Continue with Google</span>
       </Button>
 
-      <div className="relative my-8">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-4 text-sm text-muted-foreground">
+      <div className="relative my-5">
+        <Separator className="bg-gray-200" />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-gray-500">
           OR
         </span>
       </div>
 
-      <form onSubmit={handleAuth} className="space-y-5">
+      <form onSubmit={handleAuth} className="space-y-3">
         {mode === "signup" && (
-          <div className="space-y-2">
-            <label
-              htmlFor="fullName"
-              className="block text-sm font-medium text-foreground"
-            >
+          <div className="space-y-1">
+            <label htmlFor="fullName" className="block text-xs font-normal text-gray-700">
               Full Name
             </label>
             <Input
@@ -127,16 +128,13 @@ export default function AuthForm() {
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Enter your full name"
               required
-              className="w-full h-12"
+              className="h-8 rounded-md border-gray-200 text-xs focus:border-black focus:ring-black"
             />
           </div>
         )}
 
-        <div className="space-y-2">
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-foreground"
-          >
+        <div className="space-y-1">
+          <label htmlFor="email" className="block text-xs font-normal text-gray-700">
             Email
           </label>
           <Input
@@ -146,15 +144,12 @@ export default function AuthForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
             required
-            className="w-full h-12"
+            className="h-8 rounded-md border-gray-200 text-xs focus:border-black focus:ring-black"
           />
         </div>
 
-        <div className="space-y-2">
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-foreground"
-          >
+        <div className="space-y-1">
+          <label htmlFor="password" className="block text-xs font-normal text-gray-700">
             Password
           </label>
           <div className="relative">
@@ -165,49 +160,48 @@ export default function AuthForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              className="w-full h-12 pr-10"
+              className="h-8 rounded-md border-gray-200 pr-8 text-xs focus:border-black focus:ring-black"
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 transition-colors hover:text-gray-600"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
             </button>
           </div>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          variant="default"
+        <Button 
+          type="submit" 
+          className="mt-2 h-8 w-full rounded-full bg-black text-xs font-medium text-white hover:bg-gray-800" 
           disabled={loading}
         >
           {loading ? (
             <div className="flex items-center justify-center">
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             </div>
+          ) : mode === "login" ? (
+            "Sign In"
           ) : (
-            mode === "login" ? "Sign In" : "Sign Up"
+            "Sign Up"
           )}
         </Button>
       </form>
 
-      <div className="mt-6 text-center">
-        <p className="text-sm text-muted-foreground">
-          {mode === "login"
-            ? "Don't have an account?"
-            : "Already have an account?"}
+      <div className="mt-5 text-center">
+        <p className="text-xs text-gray-500">
+          {mode === "login" ? "Don't have an account?" : "Already have an account?"}
           <Button
             onClick={() => setMode(mode === "login" ? "signup" : "login")}
             variant="link"
-            className="p-0 h-auto font-medium"
+            className="h-auto p-0 text-xs font-normal text-black"
             type="button"
           >
             {mode === "login" ? "Sign Up" : "Sign In"}
           </Button>
         </p>
       </div>
-    </div>
-  );
+    </motion.div>
+  )
 }

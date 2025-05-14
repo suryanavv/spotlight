@@ -5,14 +5,7 @@ import { Project, Education, Experience } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import {
-  Share2,
-  Briefcase,
-  GraduationCap,
-  FileText,
-  CheckCircle,
-  XCircle,
-} from "lucide-react";
+import { Share2, Briefcase, GraduationCap, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from "framer-motion";
 
 export default function Overview() {
@@ -73,7 +66,7 @@ export default function Overview() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="w-12 h-12 rounded-full border-4 border-black border-t-transparent animate-spin mx-auto"></div>
+          <div className="w-8 h-8 rounded-full border-2 border-black border-t-transparent animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-500">Loading your dashboard...</p>
         </div>
       </div>
@@ -96,16 +89,16 @@ export default function Overview() {
   );
 
   return (
-    <div className="space-y-12">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-100">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200">
         <div>
-          <h1 className="text-3xl font-extrabold text-black tracking-tight mb-1">Dashboard Overview</h1>
-          <p className="text-gray-500 mt-1 text-lg">Manage and update your portfolio</p>
+          <h1 className="text-2xl font-medium text-black mb-1">Dashboard Overview</h1>
+          <p className="text-gray-500 mt-1">Manage and update your portfolio</p>
         </div>
         <Button
           onClick={() => navigate(`/portfolio/${user?.id}`)}
-          variant="default"
-          className="flex items-center gap-2"
+          variant="outline"
+          className="flex items-center gap-2 rounded-md border-gray-200 hover:bg-gray-100 hover:text-black"
         >
           <Share2 size={16} />
           View Public Portfolio
@@ -113,37 +106,37 @@ export default function Overview() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
         {[
           {
             title: "Projects",
             count: projects.length,
-            icon: <FileText size={18} className="text-blue-500" />,
+            icon: <FileText size={18} className="text-black" />,
             path: "/dashboard/projects",
-            color: "bg-blue-50 text-blue-500",
+            color: "bg-gray-100 text-black",
           },
           {
             title: "Education",
             count: education.length,
-            icon: <GraduationCap size={18} className="text-purple-500" />,
+            icon: <GraduationCap size={18} className="text-black" />,
             path: "/dashboard/education",
-            color: "bg-purple-50 text-purple-500",
+            color: "bg-gray-100 text-black",
           },
           {
             title: "Experience",
             count: experience.length,
-            icon: <Briefcase size={18} className="text-emerald-500" />,
+            icon: <Briefcase size={18} className="text-black" />,
             path: "/dashboard/experience",
-            color: "bg-emerald-50 text-emerald-500",
+            color: "bg-gray-100 text-black",
           },
         ].map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
+            transition={{ duration: 0.3, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
           >
-            <Card className="rounded-md shadow-md bg-white/90 backdrop-blur-md border border-gray-100 hover:shadow-xl transition-all duration-300">
+            <Card className="rounded-md border border-gray-200 shadow-none hover:shadow-sm transition-all duration-300">
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
                 <CardTitle className="text-base font-medium text-gray-700">
                   {stat.title}
@@ -155,13 +148,13 @@ export default function Overview() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-semibold text-gray-900">
+                <p className="text-3xl font-medium text-black">
                   {stat.count}
                 </p>
                 <p className="text-gray-500 text-sm mt-1">Total entries</p>
                 <Button
-                  variant="default"
-                  className="w-full mt-4 text-sm"
+                  variant="outline"
+                  className="w-full mt-4 text-sm rounded-md border-gray-200 hover:bg-gray-100 hover:text-black"
                   onClick={() => navigate(stat.path)}
                 >
                   Manage {stat.title}
@@ -176,11 +169,11 @@ export default function Overview() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
+        transition={{ duration: 0.3, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
       >
-        <Card className="rounded-md shadow-md bg-white/90 backdrop-blur-md border border-gray-100 hover:shadow-xl transition-all duration-300 mt-8">
+        <Card className="rounded-md border border-gray-200 shadow-none hover:shadow-sm transition-all duration-300 mt-8">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium text-gray-900">
+            <CardTitle className="text-lg font-medium text-black">
               Profile Completion
             </CardTitle>
           </CardHeader>
@@ -194,12 +187,12 @@ export default function Overview() {
                   {completedItems}/{checklistItems.length}
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
                 <motion.div
-                  className="bg-black h-2 rounded-full"
+                  className="bg-black h-1.5 rounded-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${completionPercentage}%` }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+                  transition={{ duration: 0.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 />
               </div>
             </div>
@@ -212,9 +205,9 @@ export default function Overview() {
                 >
                   <div className="flex items-center gap-3">
                     {item.completed ? (
-                      <CheckCircle size={18} className="text-green-500" />
+                      <CheckCircle size={16} className="text-black" />
                     ) : (
-                      <XCircle size={18} className="text-gray-300" />
+                      <XCircle size={16} className="text-gray-300" />
                     )}
                     <p className="font-medium text-gray-700">{item.name}</p>
                   </div>
@@ -222,7 +215,7 @@ export default function Overview() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="text-black hover:bg-gray-100 text-xs h-8"
+                      className="text-black hover:bg-gray-100 text-xs h-8 rounded-md"
                       onClick={() => {
                         if (
                           item.name === "Full Name" ||

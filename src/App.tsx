@@ -34,7 +34,6 @@ const App = () => (
               path="/"
               element={
                 <>
-                  <Header />
                   <Index />
                 </>
               }

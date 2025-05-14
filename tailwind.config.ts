@@ -1,10 +1,7 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -27,9 +24,13 @@ export default {
         "popover-foreground": "hsl(var(--popover-foreground))",
         ring: "hsl(var(--ring))",
         input: "hsl(var(--input))",
-        info: "hsl(var(--info))",
-        "info-foreground": "hsl(var(--info-foreground))",
+      },
+      fontFamily: {
+        sans: ["Inter var", "Inter", "sans-serif"],
+      },
+      transitionTimingFunction: {
+        notion: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
     },
   },
-} satisfies Config;
+} satisfies Config
