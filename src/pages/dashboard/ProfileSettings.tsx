@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { supabase } from "@/integrations/supabase/client"
+import { useClerkSupabaseClient } from "../../integrations/supabase/client"
+import { useUser } from '@clerk/clerk-react'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,8 @@ import { Upload } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function ProfileSettings() {
-  const { user, profile, refreshProfile } = useAuth()
+  const supabase = useClerkSupabaseClient()
+  const { user } = useUser()
   const [loading, setLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
@@ -33,20 +34,55 @@ export default function ProfileSettings() {
   })
 
   useEffect(() => {
-    if (profile) {
+    if (user) {
       setFormData({
-        full_name: profile.full_name || "",
-        headline: profile.headline || "",
-        bio: profile.bio || "",
-        location: profile.location || "",
-        website: profile.website || "",
-        github: profile.github || "",
-        linkedin: profile.linkedin || "",
-        twitter: profile.twitter || "",
-        avatar_url: profile.avatar_url || "",
+        full_name: user.fullName || '',
+        headline: user.unsafeMetadata.headline as string || '',
+        bio: user.unsafeMetadata.bio as string || '',
+        location: user.unsafeMetadata.location as string || '',
+        website: user.unsafeMetadata.website as string || '',
+        github: user.unsafeMetadata.github as string || '',
+        linkedin: user.unsafeMetadata.linkedin as string || '',
+        twitter: user.unsafeMetadata.twitter as string || '',
+        avatar_url: user.imageUrl || '',
       })
     }
-  }, [profile])
+  }, [user])
+
+  useEffect(() => {
+    if (!user || !supabase) return;
+    async function ensureProfile() {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (!data) {
+        const { error: insertError } = await supabase.from('user_profiles').insert({
+          id: user.id,
+          full_name: user.fullName,
+          avatar_url: user.imageUrl,
+        });
+        if (insertError) {
+          console.error('Insert error:', insertError);
+        }
+      }
+    }
+    ensureProfile();
+  }, [user, supabase]);
+
+  // Show loading spinner if supabase client is not ready
+  if (!supabase) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading profile settings...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -75,7 +111,6 @@ export default function ProfileSettings() {
       const { error } = await operation
 
       if (error) throw error
-      await refreshProfile()
       toast.success("Profile updated successfully")
     } catch (error: any) {
       toast.error(error.message || "Error updating profile")
@@ -115,7 +150,6 @@ export default function ProfileSettings() {
 
       // Update local state and refresh profile
       setFormData((prev) => ({ ...prev, avatar_url: avatarUrl }))
-      await refreshProfile()
       toast.success("Profile picture updated successfully")
     } catch (error: any) {
       toast.error(error.message || "Error uploading avatar")
@@ -144,7 +178,7 @@ export default function ProfileSettings() {
                 <Avatar className="w-24 h-24 border-2 border-gray-200">
                   <AvatarImage src={formData.avatar_url || "/placeholder.svg"} />
                   <AvatarFallback className="text-2xl bg-gray-100 text-gray-500">
-                    {formData.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
+                    {formData.full_name?.[0]?.toUpperCase() || user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 

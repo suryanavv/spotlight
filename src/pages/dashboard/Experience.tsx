@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { supabase } from "@/integrations/supabase/client"
+import { useUser } from '@clerk/clerk-react';
+import { useClerkSupabaseClient } from '../../integrations/supabase/client';
 import type { Experience } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -19,11 +19,12 @@ import { Pencil, Trash2, Plus, Briefcase, MapPin } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function ExperiencePage() {
-  const { user } = useAuth()
-  const [experienceList, setExperienceList] = useState<Experience[]>([])
-  const [loading, setLoading] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingExperience, setEditingExperience] = useState<Experience | null>(null)
+  const supabase = useClerkSupabaseClient();
+  const { user } = useUser();
+  const [experienceList, setExperienceList] = useState<Experience[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
 
   const [formData, setFormData] = useState({
     company: "",
@@ -33,29 +34,27 @@ export default function ExperiencePage() {
     end_date: "",
     current_job: false,
     description: "",
-  })
+  });
 
   useEffect(() => {
-    fetchExperience()
-  }, [user])
+    fetchExperience();
+  }, [user, supabase]);
 
   async function fetchExperience() {
-    if (!user) return
-
+    if (!user || !supabase) return;
     try {
-      setLoading(true)
+      setLoading(true);
       const { data, error } = await supabase
         .from("experience")
         .select("*")
         .eq("user_id", user.id)
-        .order("end_date", { ascending: false })
-
-      if (error) throw error
-      setExperienceList(data as Experience[])
+        .order("end_date", { ascending: false });
+      if (error) throw error;
+      setExperienceList(data as Experience[]);
     } catch (error: any) {
-      toast.error(error.message || "Error fetching experience data")
+      toast.error(error.message || "Error fetching experience data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -101,7 +100,7 @@ export default function ExperiencePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    if (!user || !supabase) return
 
     try {
       const experienceData = {
@@ -132,6 +131,7 @@ export default function ExperiencePage() {
     if (!confirm("Are you sure you want to delete this experience entry?")) return
 
     try {
+      if (!supabase) return;
       const { error } = await supabase.from("experience").delete().eq("id", id)
 
       if (error) throw error
@@ -151,7 +151,8 @@ export default function ExperiencePage() {
     return `${start} - ${end}`
   }
 
-  if (loading) {
+  // Show loading spinner if supabase client is not ready
+  if (!supabase) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">
@@ -159,7 +160,7 @@ export default function ExperiencePage() {
           <p className="mt-3 text-xs text-gray-500">Loading experience data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (

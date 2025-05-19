@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useNavigate, useLocation } from "react-router-dom"
-import { useAuth } from "@/contexts/AuthContext"
+import { useUser, useClerk } from '@clerk/clerk-react'
 import { useEffect, useState } from "react"
 import { User, FileText, Briefcase, GraduationCap, Palette, ChevronLeft, Menu, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,8 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, loading, signOut } = useAuth()
+  const { user, isLoaded } = useUser()
+  const { signOut } = useClerk()
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -40,22 +41,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [])
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth")
+    if (isLoaded && !user) {
+      navigate('/sign-in') // Clerk's default sign-in route
     }
-  }, [user, loading, navigate])
+  }, [user, isLoaded, navigate])
 
   const handleLogout = async () => {
     try {
       await signOut()
       toast.success("Signed out successfully")
-      navigate("/auth")
+      navigate("/sign-in")
     } catch (error) {
       toast.error("Error signing out")
     }
   }
 
-  if (loading) {
+  if (!isLoaded) {
     return (
       <div className="flex h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center">

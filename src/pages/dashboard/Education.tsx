@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { supabase } from "@/integrations/supabase/client"
+import { useUser } from '@clerk/clerk-react';
+import { useClerkSupabaseClient } from '../../integrations/supabase/client';
 import type { Education } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -18,11 +18,12 @@ import { Pencil, Trash2, Plus, GraduationCap } from "lucide-react"
 import { motion } from "framer-motion"
 
 export default function EducationPage() {
-  const { user } = useAuth()
-  const [educationList, setEducationList] = useState<Education[]>([])
-  const [loading, setLoading] = useState(true)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editingEducation, setEditingEducation] = useState<Education | null>(null)
+  const supabase = useClerkSupabaseClient();
+  const { user } = useUser();
+  const [educationList, setEducationList] = useState<Education[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEducation, setEditingEducation] = useState<Education | null>(null);
 
   const [formData, setFormData] = useState({
     institution: "",
@@ -31,29 +32,27 @@ export default function EducationPage() {
     start_date: "",
     end_date: "",
     description: "",
-  })
+  });
 
   useEffect(() => {
-    fetchEducation()
-  }, [user])
+    fetchEducation();
+  }, [user, supabase]);
 
   async function fetchEducation() {
-    if (!user) return
-
+    if (!user || !supabase) return;
     try {
-      setLoading(true)
+      setLoading(true);
       const { data, error } = await supabase
         .from("education")
         .select("*")
         .eq("user_id", user.id)
-        .order("end_date", { ascending: false })
-
-      if (error) throw error
-      setEducationList(data as Education[])
+        .order("end_date", { ascending: false });
+      if (error) throw error;
+      setEducationList(data as Education[]);
     } catch (error: any) {
-      toast.error(error.message || "Error fetching education data")
+      toast.error(error.message || "Error fetching education data");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -98,12 +97,17 @@ export default function EducationPage() {
       }
 
       if (editingEducation) {
-        const { error } = await supabase.from("education").update(educationData).eq("id", editingEducation.id)
+        const { error } = await supabase
+          .from("education")
+          .update(educationData)
+          .eq("id", editingEducation.id)
 
         if (error) throw error
         toast.success("Education updated successfully")
       } else {
-        const { error } = await supabase.from("education").insert([educationData])
+        const { error } = await supabase
+          .from("education")
+          .insert([educationData])
 
         if (error) throw error
         toast.success("Education added successfully")
@@ -120,7 +124,10 @@ export default function EducationPage() {
     if (!confirm("Are you sure you want to delete this education entry?")) return
 
     try {
-      const { error } = await supabase.from("education").delete().eq("id", id)
+      const { error } = await supabase
+        .from("education")
+        .delete()
+        .eq("id", id)
 
       if (error) throw error
       toast.success("Education entry deleted successfully")
@@ -139,7 +146,8 @@ export default function EducationPage() {
     return `${start} - ${end}`
   }
 
-  if (loading) {
+  // Show loading spinner if supabase client is not ready
+  if (!supabase) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">
@@ -147,7 +155,7 @@ export default function EducationPage() {
           <p className="mt-3 text-xs text-gray-500">Loading education data...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (

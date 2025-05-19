@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useClerkSupabaseClient } from '../integrations/supabase/client';
 import { Profile, Project, Education, Experience } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import {
 
 export default function Portfolio() {
   const { userId } = useParams<{ userId: string }>();
+  const supabase = useClerkSupabaseClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
@@ -27,49 +28,40 @@ export default function Portfolio() {
 
   useEffect(() => {
     async function fetchPortfolioData() {
-      if (!userId) return;
-
+      if (!userId || !supabase) return;
       try {
         setLoading(true);
         setError(null);
-
         // Fetch profile
         const { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
           .select("*")
           .eq("id", userId)
           .single();
-
         if (profileError) throw profileError;
         setProfile(profileData as Profile);
-
         // Fetch projects
         const { data: projectsData, error: projectsError } = await supabase
           .from("projects")
           .select("*")
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
-
         if (projectsError) throw projectsError;
         setProjects(projectsData as Project[]);
-
         // Fetch education
         const { data: educationData, error: educationError } = await supabase
           .from("education")
           .select("*")
           .eq("user_id", userId)
           .order("end_date", { ascending: false });
-
         if (educationError) throw educationError;
         setEducation(educationData as Education[]);
-
         // Fetch experience
         const { data: experienceData, error: experienceError } = await supabase
           .from("experience")
           .select("*")
           .eq("user_id", userId)
           .order("end_date", { ascending: false });
-
         if (experienceError) throw experienceError;
         setExperience(experienceData as Experience[]);
       } catch (error: any) {
@@ -79,16 +71,27 @@ export default function Portfolio() {
         setLoading(false);
       }
     }
-
     fetchPortfolioData();
-  }, [userId]);
+  }, [userId, supabase]);
+
+  // Show loading spinner if supabase client is not ready
+  if (!supabase) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading portfolio...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
-          <p className="mt-4">Loading portfolio...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading portfolio...</p>
         </div>
       </div>
     );
@@ -136,65 +139,65 @@ export default function Portfolio() {
   // Minimal template
   const renderMinimalTemplate = () => {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-12 rounded-md shadow-md bg-white/90 backdrop-blur-md border border-gray-100 hover:shadow-xl transition-all duration-300">
-        <div className="mb-12 text-center">
-          <Avatar className="w-24 h-24 mx-auto mb-4 shadow-md border-4 border-white rounded-md">
+      <div className="max-w-4xl mx-auto px-6 py-16 rounded-xl backdrop-blur-md border border-border bg-card/80">
+        <div className="mb-16 text-center">
+          <Avatar bordered className="w-28 h-28 mx-auto mb-6 rounded-lg">
             <AvatarImage src={profile.avatar_url || undefined} />
-            <AvatarFallback className="text-2xl">
+            <AvatarFallback className="text-2xl bg-accent text-accent-foreground">
               {profile.full_name?.[0]?.toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <h1 className="text-3xl font-bold">{profile.full_name}</h1>
+          <h1 className="text-4xl font-medium tracking-tight">{profile.full_name}</h1>
           {profile.headline && (
-            <h2 className="text-xl text-muted-foreground mt-2">
+            <h2 className="text-xl text-muted-foreground mt-3">
               {profile.headline}
             </h2>
           )}
           {profile.location && (
-            <p className="flex items-center justify-center mt-2 text-sm text-muted-foreground">
-              <MapPin size={16} className="mr-1" /> {profile.location}
+            <p className="flex items-center justify-center mt-3 text-sm text-muted-foreground">
+              <MapPin size={16} className="mr-1.5" /> {profile.location}
             </p>
           )}
 
-          <div className="flex justify-center mt-4 space-x-3">
+          <div className="flex justify-center mt-6 space-x-3">
             {profile.website && (
-              <Button size="icon" variant="secondary" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
                 <a
                   href={profile.website}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="Website"
                 >
-                  <Globe size={20} />
+                  <Globe size={18} />
                 </a>
               </Button>
             )}
             {profile.github && (
-              <Button size="icon" variant="secondary" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
                 <a
                   href={profile.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="GitHub"
                 >
-                  <Github size={20} />
+                  <Github size={18} />
                 </a>
               </Button>
             )}
             {profile.linkedin && (
-              <Button size="icon" variant="secondary" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
                 <a
                   href={profile.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="LinkedIn"
                 >
-                  <Linkedin size={20} />
+                  <Linkedin size={18} />
                 </a>
               </Button>
             )}
             {profile.twitter && (
-              <Button size="icon" variant="secondary" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
                 <a
                   href={profile.twitter}
                   target="_blank"

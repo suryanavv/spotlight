@@ -3,8 +3,8 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { supabase } from "@/integrations/supabase/client"
+import { useClerkSupabaseClient } from "../../integrations/supabase/client"
+import { useUser } from '@clerk/clerk-react'
 import type { Project } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -18,7 +18,8 @@ import { Pencil, Trash2, Plus, ExternalLink, Github, ImageIcon } from "lucide-re
 import { motion } from "framer-motion"
 
 export default function Projects() {
-  const { user } = useAuth()
+  const supabase = useClerkSupabaseClient()
+  const { user } = useUser()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -36,11 +37,10 @@ export default function Projects() {
 
   useEffect(() => {
     fetchProjects()
-  }, [user])
+  }, [user, supabase])
 
   async function fetchProjects() {
-    if (!user) return
-
+    if (!user || !supabase) return
     try {
       setLoading(true)
       const { data, error } = await supabase
@@ -48,7 +48,6 @@ export default function Projects() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-
       if (error) throw error
       setProjects(data as Project[])
     } catch (error: any) {
@@ -157,7 +156,8 @@ export default function Projects() {
     }
   }
 
-  if (loading) {
+  // Show loading spinner if supabase client is not ready
+  if (!supabase) {
     return (
       <div className="flex h-64 items-center justify-center">
         <div className="text-center">

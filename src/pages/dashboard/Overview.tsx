@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useUser } from '@clerk/clerk-react';
+import { useClerkSupabaseClient } from '../../integrations/supabase/client';
 import { Project, Education, Experience } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Share2, Briefcase, GraduationCap, FileText, CheckCircle, XCircle } from
 import { motion } from "framer-motion";
 
 export default function Overview() {
-  const { user, profile } = useAuth();
+  const { user } = useUser();
+  const supabase = useClerkSupabaseClient();
   const [projects, setProjects] = useState<Project[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
   const [experience, setExperience] = useState<Experience[]>([]);
@@ -18,7 +19,7 @@ export default function Overview() {
 
   useEffect(() => {
     async function fetchData() {
-      if (!user) return;
+      if (!user || !supabase) return;
 
       try {
         setLoading(true);
@@ -60,14 +61,14 @@ export default function Overview() {
     }
 
     fetchData();
-  }, [user]);
+  }, [user, supabase]);
 
-  if (loading) {
+  if (!supabase || loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-black border-t-transparent animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading your dashboard...</p>
+          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -75,9 +76,9 @@ export default function Overview() {
 
   // Calculate profile completion percentage
   const checklistItems = [
-    { name: "Full Name", completed: !!profile?.full_name },
-    { name: "Profile Image", completed: !!profile?.avatar_url },
-    { name: "Bio", completed: !!profile?.bio },
+    { name: "Full Name", completed: !!user?.fullName },
+    { name: "Profile Image", completed: !!user?.imageUrl },
+    { name: "Bio", completed: !!(user?.unsafeMetadata.bio as string) },
     { name: "Projects", completed: projects.length > 0 },
     { name: "Education", completed: education.length > 0 },
     { name: "Experience", completed: experience.length > 0 },
@@ -90,14 +91,14 @@ export default function Overview() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-border">
         <div>
-          <h1 className="text-2xl font-medium text-black mb-1">Dashboard Overview</h1>
-          <p className="text-gray-500 mt-1">Manage and update your portfolio</p>
+          <h1 className="text-2xl font-medium text-foreground mb-1">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-1">Manage and update your portfolio</p>
         </div>
         <Button
           onClick={() => navigate(`/portfolio/${user?.id}`)}
-          variant="outline"
+          variant="secondary"
           className="flex items-center gap-2 rounded-md border-gray-200 hover:bg-gray-100 hover:text-black"
         >
           <Share2 size={16} />
@@ -111,50 +112,49 @@ export default function Overview() {
           {
             title: "Projects",
             count: projects.length,
-            icon: <FileText size={18} className="text-black" />,
+            icon: <FileText size={18} className="text-primary" />,
             path: "/dashboard/projects",
-            color: "bg-gray-100 text-black",
+            description: "Manage your portfolio projects"
           },
           {
             title: "Education",
             count: education.length,
-            icon: <GraduationCap size={18} className="text-black" />,
+            icon: <GraduationCap size={18} className="text-primary" />,
             path: "/dashboard/education",
-            color: "bg-gray-100 text-black",
+            description: "Academic background and certifications"
           },
           {
             title: "Experience",
             count: experience.length,
-            icon: <Briefcase size={18} className="text-black" />,
+            icon: <Briefcase size={18} className="text-primary" />,
             path: "/dashboard/experience",
-            color: "bg-gray-100 text-black",
+            description: "Work history and professional experience"
           },
         ].map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.3, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
           >
-            <Card className="rounded-md border border-gray-200 shadow-none hover:shadow-sm transition-all duration-300">
+            <Card hover gradient className="h-full">
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <CardTitle className="text-base font-medium text-gray-700">
+                <CardTitle className="text-base font-medium">
                   {stat.title}
                 </CardTitle>
-                <div
-                  className={`w-8 h-8 rounded-full ${stat.color} flex items-center justify-center`}
-                >
+                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
                   {stat.icon}
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-3xl font-medium text-black">
+                <p className="text-4xl font-medium mb-2">
                   {stat.count}
                 </p>
-                <p className="text-gray-500 text-sm mt-1">Total entries</p>
+                <p className="text-muted-foreground text-sm mb-6">{stat.description}</p>
                 <Button
-                  variant="outline"
-                  className="w-full mt-4 text-sm rounded-md border-gray-200 hover:bg-gray-100 hover:text-black"
+                  variant="secondary"
+                  size="sm"
+                  className="w-full"
                   onClick={() => navigate(stat.path)}
                 >
                   Manage {stat.title}
@@ -169,53 +169,56 @@ export default function Overview() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.3, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Card className="rounded-md border border-gray-200 shadow-none hover:shadow-sm transition-all duration-300 mt-8">
+        <Card hover className="mt-8 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.02)_1px,transparent_1px)] dark:bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:4px_4px]" />
+          </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-medium text-black">
+            <CardTitle className="flex items-center gap-2 text-lg font-medium">
               Profile Completion
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-4">
-              <div className="flex justify-between mb-1">
-                <span className="text-sm text-gray-500">
+            <div className="mb-6">
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-muted-foreground">
                   {completionPercentage}% Complete
                 </span>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium">
                   {completedItems}/{checklistItems.length}
                 </span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-1.5">
+              <div className="w-full bg-secondary rounded-full h-2">
                 <motion.div
-                  className="bg-black h-1.5 rounded-full"
+                  className={`${completionPercentage > 70 ? 'bg-success' : 'bg-primary'} h-2 rounded-full`}
                   initial={{ width: 0 }}
                   animate={{ width: `${completionPercentage}%` }}
-                  transition={{ duration: 0.5, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.5, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
                 />
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2 divide-y divide-border/60">
               {checklistItems.map((item, index) => (
                 <div
                   key={index}
-                  className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0"
+                  className="flex justify-between items-center py-3 first:pt-0 group"
                 >
                   <div className="flex items-center gap-3">
                     {item.completed ? (
-                      <CheckCircle size={16} className="text-black" />
+                      <CheckCircle size={16} className="text-success" />
                     ) : (
-                      <XCircle size={16} className="text-gray-300" />
+                      <XCircle size={16} className="text-muted-foreground opacity-50" />
                     )}
-                    <p className="font-medium text-gray-700">{item.name}</p>
+                    <p className={`font-medium ${item.completed ? 'text-foreground' : 'text-muted-foreground'}`}>{item.name}</p>
                   </div>
                   {!item.completed && (
                     <Button
-                      variant="ghost"
+                      variant="subtle"
                       size="sm"
-                      className="text-black hover:bg-gray-100 text-xs h-8 rounded-md"
+                      className="opacity-60 group-hover:opacity-100 transition-opacity"
                       onClick={() => {
                         if (
                           item.name === "Full Name" ||

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useUser } from '@clerk/clerk-react';
+import { useClerkSupabaseClient } from '../../integrations/supabase/client';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -42,18 +42,31 @@ const TEMPLATES: Template[] = [
 ];
 
 export default function Templates() {
-  const { user, profile, refreshProfile } = useAuth();
+  const supabase = useClerkSupabaseClient();
+  const { user } = useUser();
   const [selectedTemplate, setSelectedTemplate] = useState<string>("minimal");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (profile?.selected_template) {
-      setSelectedTemplate(profile.selected_template);
+    if (user?.unsafeMetadata?.selected_template) {
+      setSelectedTemplate(user.unsafeMetadata.selected_template as string);
     }
-  }, [profile]);
+  }, [user]);
+
+  // Show loading spinner if supabase client is not ready
+  if (!supabase) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-b-2 border-black border-t-transparent"></div>
+          <p className="mt-3 text-xs text-gray-500">Loading templates...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleTemplateSelect = async (templateId: string) => {
-    if (!user) return;
+    if (!user || !supabase) return;
     if (templateId === selectedTemplate) return;
 
     setLoading(true);
@@ -66,7 +79,7 @@ export default function Templates() {
       if (error) throw error;
 
       setSelectedTemplate(templateId);
-      await refreshProfile();
+      await user.update({ unsafeMetadata: { ...user.unsafeMetadata, selected_template: templateId } });
       toast.success(
         `Template changed to ${TEMPLATES.find((t) => t.id === templateId)?.name}`,
       );
