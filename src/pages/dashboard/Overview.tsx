@@ -99,7 +99,8 @@ export default function Overview() {
         <Button
           onClick={() => navigate(`/portfolio/${user?.id}`)}
           variant="secondary"
-          className="flex items-center gap-2 rounded-md border-gray-200 hover:bg-gray-100 hover:text-black"
+          size="sm"
+          className="flex items-center gap-2 rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
         >
           <Share2 size={16} />
           View Public Portfolio
@@ -154,7 +155,7 @@ export default function Overview() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="w-full"
+                  className="w-full rounded-full"
                   onClick={() => navigate(stat.path)}
                 >
                   Manage {stat.title}
@@ -216,9 +217,9 @@ export default function Overview() {
                   </div>
                   {!item.completed && (
                     <Button
-                      variant="subtle"
+                      variant="default"
                       size="sm"
-                      className="opacity-60 group-hover:opacity-100 transition-opacity"
+                      className="opacity-70 group-hover:opacity-100 transition-opacity rounded-full"
                       onClick={() => {
                         if (
                           item.name === "Full Name" ||

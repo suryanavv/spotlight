@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { motion } from "framer-motion";
 
 type Template = {
   id: string;
@@ -36,8 +37,7 @@ const TEMPLATES: Template[] = [
     id: "professional",
     name: "Professional",
     description: "Traditional corporate style for business profiles.",
-    previewImage:
-      "https://placehold.co/300x200/1A1F2C/FFFFFF?text=Professional",
+    previewImage: "https://placehold.co/300x200/1A1F2C/FFFFFF?text=Professional",
   },
 ];
 
@@ -91,50 +91,56 @@ export default function Templates() {
   };
 
   return (
-    <div className="space-y-12">
-      <div className="pb-4 border-b border-gray-100">
-        <h1 className="text-3xl font-extrabold text-black tracking-tight mb-1">Choose a Template</h1>
-        <p className="text-gray-500 mt-1 text-lg">Select a template for your public portfolio</p>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-medium">Templates</h1>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-6">
-        {TEMPLATES.map((template) => (
-          <Card
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {TEMPLATES.map((template, index) => (
+          <motion.div
             key={template.id}
-            className={`rounded-md shadow-md bg-white/90 backdrop-blur-md border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden ${
-              selectedTemplate === template.id
-                ? "ring-2 ring-black ring-offset-2"
-                : "hover:shadow-md"
-            }`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: index * 0.05 }}
           >
-            <img
-              src={template.previewImage}
-              alt={template.name}
-              className="w-full h-40 object-cover"
-            />
-            <CardContent className="pt-4">
-              <h3 className="font-medium text-lg">{template.name}</h3>
-              <p className="text-muted-foreground text-sm mt-1">
-                {template.description}
-              </p>
-            </CardContent>
-            <CardFooter className="border-t p-4">
-              {selectedTemplate === template.id ? (
-                <Button variant="default" className="w-full" disabled>
-                  <Check className="mr-2 h-4 w-4" /> Selected
-                </Button>
-              ) : (
-                <Button
-                  variant="default"
-                  className="w-full"
-                  onClick={() => handleTemplateSelect(template.id)}
-                  disabled={loading}
-                >
-                  Use This Template
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
+            <Card className={`overflow-hidden border-gray-200 shadow-none transition-all duration-200 hover:shadow-sm ${
+              selectedTemplate === template.id
+                ? "ring-2 ring-black"
+                : ""
+            }`}>
+              <div className="aspect-[16/10] overflow-hidden">
+                <img
+                  src={template.previewImage}
+                  alt={template.name}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <CardContent className="p-4">
+                <h3 className="text-sm font-medium">{template.name}</h3>
+                <p className="mt-1 text-xs text-gray-500">
+                  {template.description}
+                </p>
+              </CardContent>
+              <CardFooter className="border-t border-gray-100 p-3">
+                {selectedTemplate === template.id ? (
+                  <Button className="h-7 w-full rounded-full text-xs" disabled
+                  // className="h-7 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black"
+                  >
+                    <Check className="mr-1.5 h-3.5 w-3.5" /> Selected
+                  </Button>
+                ) : (
+                  <Button
+                    className="h-7 w-full rounded-full text-xs"
+                    onClick={() => handleTemplateSelect(template.id)}
+                    disabled={loading}
+                  >
+                    Use Template
+                  </Button>
+                )}
+              </CardFooter>
+            </Card>
+          </motion.div>
         ))}
       </div>
     </div>

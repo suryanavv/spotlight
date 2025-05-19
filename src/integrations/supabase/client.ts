@@ -7,28 +7,35 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export function useClerkSupabaseClient() {
-  const { getToken } = useAuth();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [client, setClient] = useState(null);
 
   useEffect(() => {
     async function setup() {
-      const token = await getToken({ template: "supabase" });
-      const supabase = createClient<Database>(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
+      // If Clerk is loaded and user is signed in, use token
+      if (isLoaded && isSignedIn) {
+        const token = await getToken({ template: "supabase" });
+        const supabase = createClient<Database>(
+          SUPABASE_URL,
+          SUPABASE_ANON_KEY,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: "application/json",
+              },
             },
-          },
-        }
-      );
-      setClient(supabase);
+          }
+        );
+        setClient(supabase);
+      } else {
+        // Otherwise, create a public client (no auth header)
+        const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+        setClient(supabase);
+      }
     }
     setup();
-  }, [getToken]);
+  }, [getToken, isLoaded, isSignedIn]);
 
   return client;
 } 

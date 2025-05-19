@@ -193,7 +193,7 @@ export default function ProfileSettings() {
                   />
                   <Label
                     htmlFor="avatar"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-md cursor-pointer text-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-full cursor-pointer text-xs"
                   >
                     {uploadingAvatar ? (
                       "Uploading..."
@@ -317,7 +317,7 @@ export default function ProfileSettings() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" variant="default" disabled={uploadingAvatar || loading} className="rounded-md">
+              <Button type="submit" variant="default" disabled={uploadingAvatar || loading} size="sm" className="rounded-full">
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
             </div>

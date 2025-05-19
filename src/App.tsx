@@ -15,7 +15,14 @@ import Experience from "./pages/dashboard/Experience";
 import Templates from "./pages/dashboard/Templates";
 import NotFound from "./pages/NotFound";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
+// Add type for window.Clerk to fix linter error
+declare global {
+  interface Window {
+    Clerk?: { loaded?: boolean };
+  }
+}
 
 const queryClient = new QueryClient();
 
@@ -55,6 +62,30 @@ function AuthHeader({ isSignIn }: { isSignIn: boolean }) {
   );
 }
 
+function ClerkAuthLoader({ children }: { children: React.ReactNode }) {
+  const [clerkLoaded, setClerkLoaded] = useState(false);
+  useEffect(() => {
+    // Clerk loads asynchronously, so wait for window.Clerk or document event
+    if (window.Clerk && window.Clerk.loaded) {
+      setClerkLoaded(true);
+    } else {
+      const handler = () => setClerkLoaded(true);
+      window.addEventListener('clerkLoaded', handler);
+      return () => window.removeEventListener('clerkLoaded', handler);
+    }
+  }, []);
+  if (!clerkLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+  return <>{children}</>;
+}
+
 const App = () => (
   <ClerkProvider publishableKey={import.meta.env.VITE_CLERK_PUBLISHABLE_KEY}>
     <QueryClientProvider client={queryClient}>
@@ -76,18 +107,20 @@ const App = () => (
               <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
                 <div style={{ width: '100%', maxWidth: 420 }}>
                   <AuthHeader isSignIn={true} />
-                  <SignIn
-                    routing="path"
-                    path="/sign-in"
-                    appearance={{
-                      baseTheme: undefined, // force light
-                      variables: {
-                        colorBackground: '#fff',
-                        colorText: '#000',
-                      },
-                    }}
-                    afterSignInUrl="/dashboard"
-                  />
+                  <ClerkAuthLoader>
+                    <SignIn
+                      routing="path"
+                      path="/sign-in"
+                      appearance={{
+                        baseTheme: undefined, // force light
+                        variables: {
+                          colorBackground: '#fff',
+                          colorText: '#000',
+                        },
+                      }}
+                      afterSignInUrl="/dashboard"
+                    />
+                  </ClerkAuthLoader>
                 </div>
               </div>
             } />
@@ -95,18 +128,20 @@ const App = () => (
               <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
                 <div style={{ width: '100%', maxWidth: 420 }}>
                   <AuthHeader isSignIn={false} />
-                  <SignUp
-                    routing="path"
-                    path="/sign-up"
-                    appearance={{
-                      baseTheme: undefined, // force light
-                      variables: {
-                        colorBackground: '#fff',
-                        colorText: '#000',
-                      },
-                    }}
-                    afterSignUpUrl="/dashboard"
-                  />
+                  <ClerkAuthLoader>
+                    <SignUp
+                      routing="path"
+                      path="/sign-up"
+                      appearance={{
+                        baseTheme: undefined, // force light
+                        variables: {
+                          colorBackground: '#fff',
+                          colorText: '#000',
+                        },
+                      }}
+                      afterSignUpUrl="/dashboard"
+                    />
+                  </ClerkAuthLoader>
                 </div>
               </div>
             } />
