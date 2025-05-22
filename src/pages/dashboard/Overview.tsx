@@ -90,9 +90,9 @@ export default function Overview() {
   );
 
   return (
-    <div className="space-y-3 mt-16 md:mt-0">
+    <div className="space-y-4 mt-16 md:mt-0 pt-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-medium">Dashboard Overview</h1>
+        <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button

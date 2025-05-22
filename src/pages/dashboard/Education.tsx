@@ -159,7 +159,7 @@ export default function EducationPage() {
   }
 
   return (
-    <div className="space-y-5 mt-16 md:mt-0">
+    <div className="space-y-4 mt-16 md:mt-0 pt-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-medium">Education</h1>
         <Button

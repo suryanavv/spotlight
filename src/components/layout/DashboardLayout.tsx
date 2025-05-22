@@ -5,7 +5,7 @@ import type React from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useUser, useClerk } from '@clerk/clerk-react'
 import { useEffect, useState } from "react"
-import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown } from "lucide-react"
+import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X } from "lucide-react"
 import Logo from '/placeholder.svg'
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -113,18 +113,44 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen bg-white">
       {/* Mobile header with logo and app name */}
-      <header className="fixed top-3 left-0 right-0 z-50 flex flex-col items-center pointer-events-none md:hidden">
-        <div className="flex items-center justify-between h-14 px-4 w-[93vw] max-w-lg bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg pointer-events-auto">
-          <div className="flex items-center gap-2 min-w-0">
+      <header className="fixed top-5 left-0 right-0 z-50 flex flex-col items-center pointer-events-none md:hidden">
+        <div className="flex items-center justify-between h-12 px-4 w-[92vw] max-w-lg bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg pointer-events-auto">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 min-w-0 group text-left focus:outline-none"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
             <span>✦</span>
-            <span className="text-md font-semibold tracking-tight text-gray-900 select-none">Spotlight</span>
-          </div>
+            <span className="text-md font-semibold tracking-tight text-gray-900 group-hover:text-primary select-none">Spotlight</span>
+          </button>
           <button
             className="p-2 focus:outline-none active:bg-gray-100"
-            onClick={() => setMobileMenuOpen(true)}
-            aria-label="Open dashboard menu"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle dashboard menu"
           >
-            <AlignJustify size={20} />
+            <AnimatePresence mode="wait" initial={false}>
+              {mobileMenuOpen ? (
+                <motion.div
+                  key="close"
+                  initial={{ opacity: 0, rotate: -90, scale: 0.8 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <X size={20} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="menu"
+                  initial={{ opacity: 0, rotate: -90, scale: 0.8 }}
+                  animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                  exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Menu size={20} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </button>
         </div>
       </header>
@@ -145,10 +171,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="fixed bottom-8 left-0 right-0 mx-auto z-50 w-[93vw] max-w-lg rounded-xl border border-gray-200 bg-white p-4 shadow-2xl md:hidden flex flex-col items-center pointer-events-auto"
+              transition={{ type: 'spring', stiffness: 200, damping: 36 }}
+              className="fixed bottom-8 left-0 right-0 mx-auto z-50 w-[92vw] max-w-lg rounded-xl border border-gray-200 bg-white p-4 shadow-2xl md:hidden flex flex-col items-center pointer-events-auto"
             >
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="icon"
                 className="absolute right-3 top-3 h-7 w-7 rounded-full"
@@ -156,8 +182,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 aria-label="Close menu"
               >
                 <ChevronDown size={18} />
-              </Button>
-              <nav className="w-full flex-1 flex flex-col justify-center items-center gap-2 mt-7 mb-2">
+              </Button> */}
+              <nav className="w-full flex-1 flex flex-col justify-center items-center gap-2 mt-1 mb-1">
                 {navItems.map((item, index) => {
                   const active = isActive(item.path)
                   return (
@@ -198,21 +224,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             initial={{ x: -320, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -320, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            transition={{ type: "spring", stiffness: 200, damping: 36 }}
             className={cn(
               "fixed inset-y-0 left-0 z-40 w-56 transform border-r border-gray-200 bg-white rounded-xl hidden md:block",
             )}
           >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="flex h-14 items-center justify-between border-b border-gray-200 px-3"
-            >
-              <h1 className="flex items-center text-xs font-medium text-black">
-                <span className="mr-1.5 text-black">✦</span> Dashboard
-              </h1>
-            </motion.div>
+            {/* Desktop Sidebar Header with Website Name */}
+            <div className="flex h-14 items-center justify-center border-b border-gray-200 px-4 select-none">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-2 group text-left focus:outline-none"
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              >
+                <span>✦</span>
+                <span className="text-md font-semibold tracking-tight text-black group-hover:text-primary transition-colors">Spotlight</span>
+              </button>
+            </div>
             <motion.nav initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="p-2">
               <ul className="space-y-1">
                 {navItems.map((item, index) => {
@@ -243,8 +270,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                             layoutId="sidebar-indicator"
                             transition={{
                               type: "spring",
-                              stiffness: 300,
-                              damping: 30,
+                              stiffness: 200,
+                              damping: 36,
                             }}
                           />
                         )}
@@ -282,7 +309,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
           >
             {children}
           </motion.div>
