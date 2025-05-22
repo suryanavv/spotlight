@@ -169,15 +169,16 @@ export default function Projects() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+    <div className="space-y-5 mt-16 md:mt-0">
+      <div className="flex items-center justify-between">
         <h1 className="text-lg font-medium">Projects</h1>
         <Button
           variant="outline"
           onClick={() => handleOpenDialog()}
           className="h-7 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black"
         >
-          <Plus className="mr-1.5 h-3.5 w-3.5" /> Add Project
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Add Project
         </Button>
       </div>
 

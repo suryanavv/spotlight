@@ -159,12 +159,13 @@ export default function ProfileSettings() {
   }
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-medium">Profile Settings</h1>
-
+    <div className="space-y-6 mt-16 md:mt-0">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-medium">Profile Settings</h1>
+      </div>
       <Card className="border border-gray-200 shadow-none">
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Profile Information</CardTitle>
+          <CardTitle className="text-lg font-medium"></CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">

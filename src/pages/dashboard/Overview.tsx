@@ -90,17 +90,16 @@ export default function Overview() {
   );
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-border">
-        <div>
-          <h1 className="text-2xl font-medium text-foreground mb-1">Dashboard Overview</h1>
-          <p className="text-muted-foreground mt-1">Manage and update your portfolio</p>
-        </div>
+    <div className="space-y-3 mt-16 md:mt-0">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-medium">Dashboard Overview</h1>
+      </div>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button
           onClick={() => navigate(`/portfolio/${user?.id}`)}
           variant="secondary"
           size="sm"
-          className="flex items-center gap-2 rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
+          className="flex items-center rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
         >
           <Share2 size={16} />
           View Public Portfolio

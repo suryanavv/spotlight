@@ -91,7 +91,7 @@ export default function Templates() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 mt-16 md:mt-0">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-medium">Templates</h1>
       </div>
