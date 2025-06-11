@@ -9,7 +9,7 @@ import type { Experience } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -27,6 +27,9 @@ export default function ExperiencePage() {
   const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showInlineForm, setShowInlineForm] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const [formData, setFormData] = useState({
     company: "",
@@ -154,18 +157,26 @@ export default function ExperiencePage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this experience entry?")) return
+  const handleDelete = (id: string) => {
+    setDeletingId(id)
+    setShowDeleteDialog(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!deletingId) return
+    setDeleting(true)
     try {
       if (!supabase) return;
-      const { error } = await supabase.from("experience").delete().eq("id", id)
-
+      const { error } = await supabase.from("experience").delete().eq("id", deletingId)
       if (error) throw error
       toast.success("Experience entry deleted successfully")
       fetchExperience()
+      setShowDeleteDialog(false)
+      setDeletingId(null)
     } catch (error: any) {
       toast.error(error.message || "Error deleting experience entry")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -421,20 +432,20 @@ export default function ExperiencePage() {
                   <CardFooter className="flex justify-end border-t border-gray-100 p-3">
                     <div className="flex gap-1">
                       <Button
-                        size="icon"
+                        size="sm"
                         variant="ghost"
                         onClick={() => handleOpenDialog(experience)}
-                        className="h-8 w-8 rounded-full touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs touch-manipulation"
                       >
-                        <Pencil size={14} />
+                        <Pencil size={14} />Edit
                       </Button>
                       <Button
-                        size="icon"
+                        size="sm"
                         variant="ghost"
                         onClick={() => handleDelete(experience.id)}
-                        className="h-8 w-8 rounded-full touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={14} />Delete
                       </Button>
                     </div>
                   </CardFooter>
@@ -453,6 +464,36 @@ export default function ExperiencePage() {
             </DialogTitle>
           </DialogHeader>
           {renderForm()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-xs p-6 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">Delete Experience Entry?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete this experience entry. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
+            <Button
+              variant="destructive"
+              className="h-7 rounded-full px-3 text-xs hover:bg-red-400 hover:text-gray-400 order-1 sm:order-2"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

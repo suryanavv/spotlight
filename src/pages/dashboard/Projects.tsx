@@ -7,7 +7,7 @@ import type { Project } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -25,6 +25,9 @@ export default function Projects() {
   const [uploadingImage, setUploadingImage] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [showInlineForm, setShowInlineForm] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -167,17 +170,25 @@ export default function Projects() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this project?")) return
+  const handleDelete = (id: string) => {
+    setDeletingId(id)
+    setShowDeleteDialog(true)
+  }
 
+  const confirmDelete = async () => {
+    if (!deletingId) return
+    setDeleting(true)
     try {
-      const { error } = await supabase.from("projects").delete().eq("id", id)
-
+      const { error } = await supabase.from("projects").delete().eq("id", deletingId)
       if (error) throw error
       toast.success("Project deleted successfully")
       fetchProjects()
+      setShowDeleteDialog(false)
+      setDeletingId(null)
     } catch (error: any) {
       toast.error(error.message || "Error deleting project")
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -479,7 +490,7 @@ export default function Projects() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenDialog(project)}
-                        className="h-8 rounded-md px-3 text-xs touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs touch-manipulation"
                       >
                         <Pencil className="mr-1 h-3 w-3" /> Edit
                       </Button>
@@ -487,7 +498,7 @@ export default function Projects() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(project.id)}
-                        className="h-8 rounded-md px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
                       >
                         <Trash2 className="mr-1 h-3 w-3" /> Delete
                       </Button>
@@ -508,6 +519,36 @@ export default function Projects() {
             </DialogTitle>
           </DialogHeader>
           {renderForm()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-xs p-6 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">Delete Project?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete the project. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
+            <Button
+              variant="destructive"
+              className="h-7 rounded-full px-3 text-xs hover:bg-red-400 hover:text-gray-400 order-1 sm:order-2"
+              onClick={confirmDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
+              onClick={() => setShowDeleteDialog(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

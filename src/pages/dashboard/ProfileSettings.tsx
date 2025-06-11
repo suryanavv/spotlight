@@ -12,14 +12,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Upload } from "lucide-react"
+import { Upload, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 
 export default function ProfileSettings() {
   const supabase = useClerkSupabaseClient()
   const { user } = useUser()
   const [loading, setLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false)
+  const [removingAvatar, setRemovingAvatar] = useState(false)
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -158,6 +161,26 @@ export default function ProfileSettings() {
     }
   }
 
+  const handleRemoveAvatar = async () => {
+    if (!user) return
+    setRemovingAvatar(true)
+    try {
+      // Remove avatar_url from profile
+      const { error } = await supabase
+        .from("user_profiles")
+        .update({ avatar_url: "" })
+        .eq("id", user.id)
+      if (error) throw error
+      setFormData((prev) => ({ ...prev, avatar_url: "" }))
+      toast.success("Profile photo removed successfully")
+      setShowRemoveDialog(false)
+    } catch (error: any) {
+      toast.error(error.message || "Error removing profile photo")
+    } finally {
+      setRemovingAvatar(false)
+    }
+  }
+
   return (
     <div className="space-y-4 mt-16 md:mt-0 pt-6">
       <div className="flex items-center justify-between">
@@ -183,7 +206,7 @@ export default function ProfileSettings() {
                   </AvatarFallback>
                 </Avatar>
 
-                <div className="relative">
+                <div className="relative flex flex-col gap-2 items-center mt-2">
                   <input
                     type="file"
                     id="avatar"
@@ -192,9 +215,14 @@ export default function ProfileSettings() {
                     onChange={handleAvatarChange}
                     disabled={uploadingAvatar}
                   />
-                  <Label
-                    htmlFor="avatar"
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-full cursor-pointer text-xs"
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-full cursor-pointer"
+                    onClick={() => document.getElementById('avatar')?.click()}
+                    disabled={uploadingAvatar}
+                    aria-label="Change profile photo"
                   >
                     {uploadingAvatar ? (
                       "Uploading..."
@@ -203,7 +231,21 @@ export default function ProfileSettings() {
                         <Upload size={14} /> Change Photo
                       </>
                     )}
-                  </Label>
+                  </Button>
+                  {formData.avatar_url && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 rounded-full text-red-500 bg-red-50 hover:bg-red-100 px-3 text-xs mt-1"
+                      title="Remove photo"
+                      onClick={() => setShowRemoveDialog(true)}
+                      disabled={uploadingAvatar || removingAvatar}
+                      aria-label="Remove profile photo"
+                    >
+                      <Trash2 size={16} className="mr-1" /> Remove Photo
+                    </Button>
+                  )}
                 </div>
               </motion.div>
 
@@ -325,6 +367,36 @@ export default function ProfileSettings() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Remove Photo Confirmation Dialog */}
+      <Dialog open={showRemoveDialog} onOpenChange={setShowRemoveDialog}>
+        <DialogContent className="max-w-xs p-6 rounded-xl">
+          <DialogHeader>
+            <DialogTitle className="text-base">Remove Profile Photo?</DialogTitle>
+            <DialogDescription>
+              This will delete your current profile photo and revert to the default avatar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
+            <Button
+              variant="destructive"
+              className="h-7 rounded-full px-3 text-xs hover:bg-red-400 hover:text-gray-400 order-1 sm:order-2"
+              onClick={handleRemoveAvatar}
+              disabled={removingAvatar}
+            >
+              {removingAvatar ? "Removing..." : "Remove"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
+              onClick={() => setShowRemoveDialog(false)}
+              disabled={removingAvatar}
+            >
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
