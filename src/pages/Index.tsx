@@ -2,9 +2,9 @@
 
 import { useNavigate, Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import { useUser, useClerk } from '@clerk/clerk-react'
+import { useUser, useClerk, SignIn, SignUp, UserProfile } from '@clerk/clerk-react'
 import { motion } from "framer-motion"
-import { ArrowRight, Check, Share2 } from 'lucide-react'
+import { ArrowRight, Check, Share2, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -15,17 +15,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { useState, useEffect } from "react"
 
 const Index = () => {
   const { user } = useUser()
   const navigate = useNavigate()
   const { signOut } = useClerk()
+  const [authMode, setAuthMode] = useState<null | 'sign-in' | 'sign-up'>(null)
+  const [showProfile, setShowProfile] = useState(false)
+
+  // Disable background scroll and dim background when popout is open
+  useEffect(() => {
+    const popoutOpen = !!authMode || showProfile;
+    if (popoutOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [authMode, showProfile]);
 
   const handleSignOut = async () => {
     try {
       await signOut()
       toast.success("Signed out successfully")
-      navigate("/sign-in")
+      setAuthMode('sign-in')
     } catch (error) {
       toast.error("Error signing out")
     }
@@ -51,6 +67,98 @@ const Index = () => {
     },
   ]
 
+  // Custom popout for Clerk UI (click outside to close, dim background)
+  const renderAuthPopout = () => (
+    <>
+      {/* Dimmed overlay for outside click */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          background: 'rgba(0,0,0,0.35)',
+        }}
+        onClick={() => setAuthMode(null)}
+        aria-label="Close authentication popout"
+      />
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 51,
+          minHeight: 100,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        role="dialog"
+        aria-modal="true"
+        onClick={e => e.stopPropagation()}
+      >
+        {authMode === 'sign-in' ? (
+          <SignIn
+            appearance={{
+              variables: {
+                colorBackground: '#fff',
+                colorText: '#000',
+              },
+            }}
+            afterSignInUrl="/dashboard"
+            signUpUrl="/"
+          />
+        ) : (
+          <SignUp
+            appearance={{
+              variables: {
+                colorBackground: '#fff',
+                colorText: '#000',
+              },
+            }}
+            afterSignUpUrl="/dashboard"
+            signInUrl="/"
+          />
+        )}
+      </div>
+    </>
+  )
+
+  // Custom popout for Clerk UserProfile (click outside to close, dim background)
+  const renderProfilePopout = () => (
+    <>
+      {/* Dimmed overlay for outside click */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          background: 'rgba(0,0,0,0.35)',
+        }}
+        onClick={() => setShowProfile(false)}
+        aria-label="Close profile popout"
+      />
+      <div
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 51,
+          minHeight: 100,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        role="dialog"
+        aria-modal="true"
+        onClick={e => e.stopPropagation()}
+      >
+        <UserProfile />
+      </div>
+    </>
+  )
+
   return (
     <div className="flex min-h-screen flex-col bg-white">      {/* Announcement Banner */}
       <div className="bg-primary py-2 text-center text-xs text-primary-foreground">
@@ -61,7 +169,7 @@ const Index = () => {
             variant="link"
             size="sm"
             className="ml-2 h-auto p-0 text-xs font-normal text-primary-foreground underline"
-            onClick={() => navigate("/sign-up")}
+            onClick={() => setAuthMode('sign-up')}
           >
             Check it out →
           </Button>
@@ -127,17 +235,17 @@ const Index = () => {
                       Dashboard
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => navigate("/dashboard/profile")}
+                      onClick={() => setShowProfile(true)}
                       className="rounded-sm text-xs hover:bg-gray-50 hover:text-black"
                     >
-                      Profile Settings
+                      Manage Profile
                     </DropdownMenuItem>
                     <DropdownMenuSeparator className="bg-gray-100" />
                     <DropdownMenuItem
                       onClick={handleSignOut}
                       className="rounded-sm text-xs text-gray-700 hover:bg-gray-50 hover:text-black"
                     >
-                      Sign out
+                      Log out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -145,19 +253,12 @@ const Index = () => {
             ) : (
               <>
                 <Button
-                  variant="ghost"
+                  variant="gradient"
                   size="sm"
-                  onClick={() => navigate("/sign-in")}
-                  className="hidden h-8 rounded-full px-3 text-xs font-normal text-gray-600 hover:bg-gray-50 hover:text-black md:inline-flex"
+                  onClick={() => setAuthMode('sign-in')}
+                  className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
                 >
                   Log in
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={() => navigate("/sign-up")}
-                  className="h-8 rounded-full bg-black px-3 text-xs font-medium text-white hover:bg-gray-800"
-                >
-                  Sign up
                 </Button>
               </>
             )}
@@ -201,7 +302,7 @@ const Index = () => {
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button
-                  onClick={() => navigate(user ? "/dashboard" : "/sign-up")}
+                  onClick={() => setAuthMode(user ? null : 'sign-up')}
                   size="lg"
                   variant="gradient"
                   className="rounded-full px-6"
@@ -281,7 +382,7 @@ const Index = () => {
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
               <Button
-                onClick={() => navigate(user ? "/dashboard" : "/sign-up")}
+                onClick={() => setAuthMode(user ? null : 'sign-up')}
                 variant="gradient"
                 size="lg"
                 className="rounded-full px-6"
@@ -305,6 +406,9 @@ const Index = () => {
           </div>
         </div>
       </footer>
+      {/* Clerk Auth Popout */}
+      {authMode && renderAuthPopout()}
+      {showProfile && renderProfilePopout()}
     </div>
   )
 }

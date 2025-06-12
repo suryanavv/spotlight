@@ -26,41 +26,6 @@ declare global {
 
 const queryClient = new QueryClient();
 
-// Inline component for auth page header buttons
-function AuthHeader({ isSignIn }: { isSignIn: boolean }) {
-  const navigate = useNavigate();
-  return (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 32, marginTop: 24 }}>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => navigate('/')}
-        className="h-8 rounded-full px-3 text-xs font-medium"
-      >
-        ← Back
-      </Button>
-      {isSignIn ? (
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => navigate('/sign-up')}
-          className="h-8 rounded-full bg-black px-3 text-xs font-medium text-white hover:bg-gray-800"
-        >
-          Sign Up
-        </Button>
-      ) : (
-        <Button
-          variant="default"
-          size="sm"
-          onClick={() => navigate('/sign-in')}
-          className="h-8 rounded-full bg-black px-3 text-xs font-medium text-white hover:bg-gray-800"
-        >
-          Sign In
-        </Button>
-      )}
-    </div>
-  );
-}
 
 function ClerkAuthLoader({ children }: { children: React.ReactNode }) {
   const [clerkLoaded, setClerkLoaded] = useState(false);
@@ -103,48 +68,6 @@ const App = () => (
             <Route path="/dashboard/education" element={<DashboardLayout><Education /></DashboardLayout>} />
             <Route path="/dashboard/experience" element={<DashboardLayout><Experience /></DashboardLayout>} />
             <Route path="/dashboard/templates" element={<DashboardLayout><Templates /></DashboardLayout>} />
-            <Route path="/sign-in/*" element={
-              <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-                <div style={{ width: '100%', maxWidth: 420 }}>
-                  <AuthHeader isSignIn={true} />
-                  <ClerkAuthLoader>
-                    <SignIn
-                      routing="path"
-                      path="/sign-in"
-                      appearance={{
-                        baseTheme: undefined, // force light
-                        variables: {
-                          colorBackground: '#fff',
-                          colorText: '#000',
-                        },
-                      }}
-                      afterSignInUrl="/dashboard"
-                    />
-                  </ClerkAuthLoader>
-                </div>
-              </div>
-            } />
-            <Route path="/sign-up/*" element={
-              <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-                <div style={{ width: '100%', maxWidth: 420 }}>
-                  <AuthHeader isSignIn={false} />
-                  <ClerkAuthLoader>
-                    <SignUp
-                      routing="path"
-                      path="/sign-up"
-                      appearance={{
-                        baseTheme: undefined, // force light
-                        variables: {
-                          colorBackground: '#fff',
-                          colorText: '#000',
-                        },
-                      }}
-                      afterSignUpUrl="/dashboard"
-                    />
-                  </ClerkAuthLoader>
-                </div>
-              </div>
-            } />
             {/* Catch-all route */}
             <Route path="*" element={<NotFound />} />
           </Routes>

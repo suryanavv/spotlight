@@ -44,7 +44,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     if (isLoaded && !user) {
-      navigate('/sign-in') // Clerk's default sign-in route
+      navigate('/') // Clerk's default sign-in route
     }
   }, [user, isLoaded, navigate])
 
@@ -52,7 +52,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     try {
       await signOut()
       toast.success("Signed out successfully")
-      navigate("/sign-in")
+      navigate("/")
     } catch (error) {
       toast.error("Error signing out")
     }
@@ -209,7 +209,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   onClick={handleLogout}
                 >
                   <LogOut size={16} className="mr-2" />
-                  Logout
+                  Log out
                 </Button>
               </nav>
             </motion.div>
@@ -289,7 +289,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 onClick={handleLogout}
               >
                 <LogOut size={14} />
-                Logout
+                Log out
               </Button>
             </div>
           </motion.div>
