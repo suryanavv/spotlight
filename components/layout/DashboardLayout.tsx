@@ -2,8 +2,8 @@
 
 import type React from "react"
 
-import { useNavigate, useLocation } from "react-router-dom"
-import { useUser, useClerk } from '@clerk/clerk-react'
+import { useRouter, usePathname } from "next/navigation"
+import { useUser, useClerk } from '@clerk/nextjs'
 import { useEffect, useState } from "react"
 import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X } from "lucide-react"
 import Logo from '/placeholder.svg'
@@ -19,8 +19,8 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, isLoaded } = useUser()
   const { signOut } = useClerk()
-  const navigate = useNavigate()
-  const location = useLocation()
+  const router = useRouter()
+  const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -44,15 +44,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     if (isLoaded && !user) {
-      navigate('/') // Clerk's default sign-in route
+      router.push('/') // Clerk's default sign-in route
     }
-  }, [user, isLoaded, navigate])
+  }, [user, isLoaded, router])
 
   const handleLogout = async () => {
     try {
       await signOut()
       toast.success("Signed out successfully")
-      navigate("/")
+      router.push("/")
     } catch (error) {
       toast.error("Error signing out")
     }
@@ -71,7 +71,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navItems = [
     { icon: <FileText size={16} />, name: "Overview", path: "/dashboard" },
-    { icon: <User size={16} />, name: "Profile", path: "/dashboard/profile" },
+    { icon: <User size={16} />, name: "Profile Settings", path: "/dashboard/profile-settings" },
     {
       icon: <Briefcase size={16} />,
       name: "Projects",
@@ -94,13 +94,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     },
   ]
 
-  const isActive = (path: string) => location.pathname === path
+  const isActive = (path: string) => pathname === path
 
   // Helper to get current section name for header
   const getSectionName = () => {
-    const path = location.pathname
+    const path = pathname
     if (path === "/dashboard") return "Overview"
-    if (path === "/dashboard/profile") return "Profile Settings"
+    if (path === "/dashboard/profile-settings") return "Profile Settings"
     if (path === "/dashboard/projects") return "Projects"
     if (path === "/dashboard/education") return "Education"
     if (path === "/dashboard/experience") return "Experience"
@@ -116,7 +116,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <header className="fixed top-5 left-0 right-0 z-50 flex flex-col items-center pointer-events-none md:hidden">
         <div className="flex items-center justify-between h-12 px-4 w-[92vw] max-w-lg bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg pointer-events-auto">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => router.push('/')}
             className="flex items-center gap-2 min-w-0 group text-left focus:outline-none"
             style={{ fontFamily: 'Inter, sans-serif' }}
           >
@@ -193,7 +193,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       size="sm"
                       className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8"
                       onClick={() => {
-                        navigate(item.path)
+                        router.push(item.path)
                         setMobileMenuOpen(false)
                       }}
                     >
@@ -232,7 +232,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Desktop Sidebar Header with Website Name */}
             <div className="flex h-14 items-center justify-center border-b border-gray-200 px-4 select-none">
               <button
-                onClick={() => navigate('/')}
+                onClick={() => router.push('/')}
                 className="flex items-center gap-2 group text-left focus:outline-none"
                 style={{ fontFamily: 'Inter, sans-serif' }}
               >
@@ -259,7 +259,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           active ? "bg-gray-100 text-black" : "text-gray-600 hover:bg-gray-100",
                         )}
                         onClick={() => {
-                          navigate(item.path)
+                          router.push(item.path)
                         }}
                       >
                         <span className={cn("mr-2", active ? "text-black" : "text-gray-400")}>{item.icon}</span>
@@ -305,7 +305,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         >
           <motion.div
-            key={location.pathname}
+            key={pathname}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}

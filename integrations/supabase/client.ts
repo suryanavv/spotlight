@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
-import { useAuth } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/nextjs";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export function useClerkSupabaseClient() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
-  const [client, setClient] = useState(null);
+  const [client, setClient] = useState<any>(null);
 
   useEffect(() => {
     async function setup() {
@@ -16,8 +16,8 @@ export function useClerkSupabaseClient() {
       if (isLoaded && isSignedIn) {
         const token = await getToken({ template: "supabase" });
         const supabase = createClient<Database>(
-          SUPABASE_URL,
-          SUPABASE_ANON_KEY,
+          SUPABASE_URL!,
+          SUPABASE_ANON_KEY!,
           {
             global: {
               headers: {
@@ -30,7 +30,7 @@ export function useClerkSupabaseClient() {
         setClient(supabase);
       } else {
         // Otherwise, create a public client (no auth header)
-        const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = createClient<Database>(SUPABASE_URL!, SUPABASE_ANON_KEY!);
         setClient(supabase);
       }
     }

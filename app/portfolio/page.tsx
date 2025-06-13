@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { useClerkSupabaseClient } from '../integrations/supabase/client';
+import { useParams } from "next/navigation";
+import { useClerkSupabaseClient } from '@/integrations/supabase/client';
 import { Profile, Project, Education, Experience } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import NotFound from "./NotFound";
+import NotFound from "app/not-found";
 import { format, parseISO } from "date-fns";
 import {
   Github,
@@ -77,21 +77,21 @@ export default function Portfolio() {
   // Show loading spinner if supabase client is not ready
   if (!supabase) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading portfolio...</p>
-        </div>
+      <div className="flex h-screen items-center justify-center bg-white">
+      <div className="flex flex-col items-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+        <p className="mt-3 text-xs text-gray-500">Loading Portfolio...</p>
       </div>
+    </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading portfolio...</p>
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="flex flex-col items-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+          <p className="mt-3 text-xs text-gray-500">Loading Portfolio...</p>
         </div>
       </div>
     );

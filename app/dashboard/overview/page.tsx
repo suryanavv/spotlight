@@ -1,10 +1,11 @@
+"use client";
 import { useEffect, useState } from "react";
-import { useUser } from '@clerk/clerk-react';
-import { useClerkSupabaseClient } from '../../integrations/supabase/client';
+import { useUser } from '@clerk/nextjs';
+import { useClerkSupabaseClient } from '@/integrations/supabase/client';
 import { Project, Education, Experience } from "@/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { Share2, Briefcase, GraduationCap, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from "framer-motion";
 
@@ -15,7 +16,7 @@ export default function Overview() {
   const [education, setEducation] = useState<Education[]>([]);
   const [experience, setExperience] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchData() {
@@ -65,10 +66,10 @@ export default function Overview() {
 
   if (!supabase || loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="flex flex-col items-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+          <p className="mt-3 text-xs text-gray-500">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -96,7 +97,7 @@ export default function Overview() {
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button
-          onClick={() => navigate(`/portfolio/${user?.id}`)}
+          onClick={() => router.push(`/portfolio/${user?.id}`)}
           variant="secondary"
           size="sm"
           className="flex items-center rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
@@ -155,7 +156,7 @@ export default function Overview() {
                   variant="secondary"
                   size="sm"
                   className="w-full rounded-full"
-                  onClick={() => navigate(stat.path)}
+                  onClick={() => router.push(stat.path)}
                 >
                   Manage {stat.title}
                 </Button>
@@ -225,13 +226,13 @@ export default function Overview() {
                           item.name === "Profile Image" ||
                           item.name === "Bio"
                         ) {
-                          navigate("/dashboard/profile");
+                          router.push("/dashboard/profile");
                         } else if (item.name === "Projects") {
-                          navigate("/dashboard/projects");
+                          router.push("/dashboard/projects");
                         } else if (item.name === "Education") {
-                          navigate("/dashboard/education");
+                          router.push("/dashboard/education");
                         } else if (item.name === "Experience") {
-                          navigate("/dashboard/experience");
+                          router.push("/dashboard/experience");
                         }
                       }}
                     >

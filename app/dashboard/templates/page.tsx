@@ -1,6 +1,8 @@
+"use client"
+
 import { useState, useEffect } from "react";
-import { useUser } from '@clerk/clerk-react';
-import { useClerkSupabaseClient } from '../../integrations/supabase/client';
+import { useUser } from '@clerk/nextjs';
+import { useClerkSupabaseClient } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -56,10 +58,10 @@ export default function Templates() {
   // Show loading spinner if supabase client is not ready
   if (!supabase) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-center">
-          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-b-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading templates...</p>
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="flex flex-col items-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+          <p className="mt-3 text-xs text-gray-500">Loading Templates...</p>
         </div>
       </div>
     );

@@ -1,8 +1,9 @@
 "use client"
 
-import { useNavigate, Link } from "react-router-dom"
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
-import { useUser, useClerk, SignIn, SignUp, UserProfile } from '@clerk/clerk-react'
+import { useUser, useClerk, SignIn, SignUp, UserProfile, UserButton, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
 import { motion } from "framer-motion"
 import { ArrowRight, Check, Share2, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,7 +20,7 @@ import { useState, useEffect } from "react"
 
 const Index = () => {
   const { user } = useUser()
-  const navigate = useNavigate()
+  const router = useRouter()
   const { signOut } = useClerk()
   const [authMode, setAuthMode] = useState<null | 'sign-in' | 'sign-up'>(null)
   const [showProfile, setShowProfile] = useState(false)
@@ -116,7 +117,7 @@ const Index = () => {
                 colorText: '#000',
               },
             }}
-            afterSignUpUrl="/dashboard"
+            forceRedirectUrl="/dashboard"
             signInUrl="/"
           />
         )}
@@ -124,10 +125,8 @@ const Index = () => {
     </>
   )
 
-  // Custom popout for Clerk UserProfile (click outside to close, dim background)
   const renderProfilePopout = () => (
     <>
-      {/* Dimmed overlay for outside click */}
       <div
         style={{
           position: 'fixed',
@@ -157,7 +156,7 @@ const Index = () => {
         <UserProfile />
       </div>
     </>
-  )
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-white">      {/* Announcement Banner */}
@@ -186,7 +185,7 @@ const Index = () => {
         <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-8">
             <Link
-              to="/"
+              href="/"
               className="flex items-center text-sm font-medium tracking-tight text-foreground transition-opacity hover:opacity-80"
             >
               <span className="mr-2 text-primary">✦</span> Spotlight
@@ -199,56 +198,16 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => navigate(`/portfolio/${user.id}`)}
+                  onClick={() => router.push(`/portfolio/${user.id}`)}
                   className="hidden h-8 items-center gap-1.5 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black sm:flex"
                 >
                   <Share2 size={12} />
                   <span>View Portfolio</span>
                 </Button>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-9 w-9 overflow-hidden rounded-full p-0 shadow-none transition-all duration-200"
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.imageUrl || undefined} alt="Profile" />
-                        <AvatarFallback className="bg-accent text-xs font-medium text-accent-foreground">
-                          {user.fullName?.[0] || user.primaryEmailAddress?.emailAddress?.[0].toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 rounded-md border border-gray-200 shadow-sm">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-xs font-medium leading-none">{user.fullName || "User"}</p>
-                        <p className="text-xs leading-none text-gray-500">{user.primaryEmailAddress?.emailAddress}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-100" />
-                    <DropdownMenuItem
-                      onClick={() => navigate("/dashboard")}
-                      className="rounded-sm text-xs hover:bg-gray-50 hover:text-black"
-                    >
-                      Dashboard
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => setShowProfile(true)}
-                      className="rounded-sm text-xs hover:bg-gray-50 hover:text-black"
-                    >
-                      Manage Profile
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-gray-100" />
-                    <DropdownMenuItem
-                      onClick={handleSignOut}
-                      className="rounded-sm text-xs text-gray-700 hover:bg-gray-50 hover:text-black"
-                    >
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <SignedIn>
+                  <UserButton afterSignOutUrl="/" />
+                </SignedIn>
               </>
             ) : (
               <>
@@ -302,7 +261,7 @@ const Index = () => {
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button
-                  onClick={() => setAuthMode(user ? null : 'sign-up')}
+                  onClick={() => user ? router.push('/dashboard') : setAuthMode('sign-up')}
                   size="lg"
                   variant="gradient"
                   className="rounded-full px-6"
@@ -382,7 +341,7 @@ const Index = () => {
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
               <Button
-                onClick={() => setAuthMode(user ? null : 'sign-up')}
+                onClick={() => user ? router.push('/dashboard') : setAuthMode('sign-up')}
                 variant="gradient"
                 size="lg"
                 className="rounded-full px-6"

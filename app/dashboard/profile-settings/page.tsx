@@ -1,10 +1,8 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
-import { useClerkSupabaseClient } from "../../integrations/supabase/client"
-import { useUser } from '@clerk/clerk-react'
+import { useClerkSupabaseClient } from "@/integrations/supabase/client"
+import { useUser } from '@clerk/nextjs'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,20 +35,41 @@ export default function ProfileSettings() {
   })
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        full_name: user.fullName || '',
-        headline: user.unsafeMetadata.headline as string || '',
-        bio: user.unsafeMetadata.bio as string || '',
-        location: user.unsafeMetadata.location as string || '',
-        website: user.unsafeMetadata.website as string || '',
-        github: user.unsafeMetadata.github as string || '',
-        linkedin: user.unsafeMetadata.linkedin as string || '',
-        twitter: user.unsafeMetadata.twitter as string || '',
-        avatar_url: user.imageUrl || '',
-      })
+    if (!user || !supabase) return;
+    async function fetchProfile() {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user!.id)
+        .single();
+      if (data) {
+        setFormData({
+          full_name: data.full_name || '',
+          headline: data.headline || '',
+          bio: data.bio || '',
+          location: data.location || '',
+          website: data.website || '',
+          github: data.github || '',
+          linkedin: data.linkedin || '',
+          twitter: data.twitter || '',
+          avatar_url: data.avatar_url || user!.imageUrl || '',
+        });
+      } else {
+        setFormData({
+          full_name: user!.fullName || '',
+          headline: user!.unsafeMetadata.headline as string || '',
+          bio: user!.unsafeMetadata.bio as string || '',
+          location: user!.unsafeMetadata.location as string || '',
+          website: user!.unsafeMetadata.website as string || '',
+          github: user!.unsafeMetadata.github as string || '',
+          linkedin: user!.unsafeMetadata.linkedin as string || '',
+          twitter: user!.unsafeMetadata.twitter as string || '',
+          avatar_url: user!.imageUrl || '',
+        });
+      }
     }
-  }, [user])
+    fetchProfile();
+  }, [user, supabase]);
 
   useEffect(() => {
     if (!user || !supabase) return;
@@ -58,14 +77,14 @@ export default function ProfileSettings() {
       const { data, error } = await supabase
         .from('user_profiles')
         .select('id')
-        .eq('id', user.id)
+        .eq('id', user!.id)
         .single();
 
       if (!data) {
         const { error: insertError } = await supabase.from('user_profiles').insert({
-          id: user.id,
-          full_name: user.fullName,
-          avatar_url: user.imageUrl,
+          id: user!.id,
+          full_name: user!.fullName,
+          avatar_url: user!.imageUrl,
         });
         if (insertError) {
           console.error('Insert error:', insertError);
@@ -78,10 +97,10 @@ export default function ProfileSettings() {
   // Show loading spinner if supabase client is not ready
   if (!supabase) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading profile settings...</p>
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="flex flex-col items-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
+          <p className="mt-3 text-xs text-gray-500">Loading Profile Settings...</p>
         </div>
       </div>
     );
