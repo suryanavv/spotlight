@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useUser } from '@clerk/nextjs';
 import { useClerkSupabaseClient } from '@/integrations/supabase/client';
 import type { Experience } from "@/types/database"
@@ -39,6 +39,28 @@ export default function ExperiencePage() {
     description: "",
   });
 
+  const fetchExperience = useCallback(async () => {
+    if (!user || !supabase) return;
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("experience")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("end_date", { ascending: false });
+      if (error) throw error;
+      setExperienceList(data as Experience[]);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error fetching experience data");
+      } else {
+        toast.error("Error fetching experience data");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user, supabase]);
+
   useEffect(() => {
     fetchExperience();
     
@@ -50,25 +72,7 @@ export default function ExperiencePage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, [user, supabase]);
-
-  async function fetchExperience() {
-    if (!user || !supabase) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("experience")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("end_date", { ascending: false });
-      if (error) throw error;
-      setExperienceList(data as Experience[]);
-    } catch (error: any) {
-      toast.error(error.message || "Error fetching experience data");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [user, supabase, fetchExperience]);
 
   const handleOpenDialog = (experience: Experience | null = null) => {
     // Close any existing inline forms first
@@ -150,8 +154,12 @@ export default function ExperiencePage() {
 
       handleCloseForm()
       fetchExperience()
-    } catch (error: any) {
-      toast.error(error.message || "Error saving experience details")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error saving experience details");
+      } else {
+        toast.error("Error saving experience details");
+      }
     }
   }
 
@@ -171,8 +179,12 @@ export default function ExperiencePage() {
       fetchExperience()
       setShowDeleteDialog(false)
       setDeletingId(null)
-    } catch (error: any) {
-      toast.error(error.message || "Error deleting experience entry")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error deleting experience entry");
+      } else {
+        toast.error("Error deleting experience entry");
+      }
     } finally {
       setDeleting(false)
     }
@@ -476,8 +488,8 @@ export default function ExperiencePage() {
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
             <Button
-              variant="destructive"
-              className="h-7 rounded-full px-3 text-xs hover:bg-red-400 hover:text-gray-400 order-1 sm:order-2"
+              variant="default"
+              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
               onClick={confirmDelete}
               disabled={deleting}
             >

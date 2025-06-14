@@ -65,9 +65,12 @@ export default function Portfolio() {
           .order("end_date", { ascending: false });
         if (experienceError) throw experienceError;
         setExperience(experienceData as Experience[]);
-      } catch (error: any) {
-        console.error("Error fetching portfolio data:", error);
-        setError(error.message || "Error fetching portfolio data");
+      } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'message' in error) {
+          setError((error as { message?: string }).message || "Error fetching portfolio data");
+        } else {
+          setError("Error fetching portfolio data");
+        }
       } finally {
         setLoading(false);
       }
@@ -142,7 +145,7 @@ export default function Portfolio() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-16 rounded-xl backdrop-blur-md border border-border bg-card/80">
         <div className="mb-16 text-center">
-          <Avatar bordered className="w-28 h-28 mx-auto mb-6 rounded-lg">
+          <Avatar className="w-28 h-28 mx-auto mb-6 rounded-lg border-4 border-white">
             <AvatarImage src={profile.avatar_url || undefined} />
             <AvatarFallback className="text-2xl bg-accent text-accent-foreground">
               {profile.full_name?.[0]?.toUpperCase()}

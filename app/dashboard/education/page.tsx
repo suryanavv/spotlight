@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useUser } from '@clerk/nextjs';
 import { useClerkSupabaseClient } from '@/integrations/supabase/client';
 import type { Education } from "@/types/database"
@@ -37,6 +37,28 @@ export default function EducationPage() {
     description: "",
   });
 
+  const fetchEducation = useCallback(async () => {
+    if (!user || !supabase) return;
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("education")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("end_date", { ascending: false });
+      if (error) throw error;
+      setEducationList(data as Education[]);
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error fetching education data");
+      } else {
+        toast.error("Error fetching education data");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user, supabase]);
+
   useEffect(() => {
     fetchEducation();
     
@@ -48,25 +70,7 @@ export default function EducationPage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, [user, supabase]);
-
-  async function fetchEducation() {
-    if (!user || !supabase) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("education")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("end_date", { ascending: false });
-      if (error) throw error;
-      setEducationList(data as Education[]);
-    } catch (error: any) {
-      toast.error(error.message || "Error fetching education data");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [user, supabase, fetchEducation]);
 
   const handleOpenDialog = (education: Education | null = null) => {
     // Close any existing inline forms first
@@ -143,8 +147,12 @@ export default function EducationPage() {
 
       handleCloseForm()
       fetchEducation()
-    } catch (error: any) {
-      toast.error(error.message || "Error saving education details")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error saving education details");
+      } else {
+        toast.error("Error saving education details");
+      }
     }
   }
 
@@ -163,8 +171,12 @@ export default function EducationPage() {
       fetchEducation()
       setShowDeleteDialog(false)
       setDeletingId(null)
-    } catch (error: any) {
-      toast.error(error.message || "Error deleting education entry")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error deleting education entry");
+      } else {
+        toast.error("Error deleting education entry");
+      }
     } finally {
       setDeleting(false)
     }
@@ -460,8 +472,8 @@ export default function EducationPage() {
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
             <Button
-              variant="destructive"
-              className="h-7 rounded-full px-3 text-xs hover:bg-red-400 hover:text-gray-400 order-1 sm:order-2"
+              variant="default"
+              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
               onClick={confirmDelete}
               disabled={deleting}
             >

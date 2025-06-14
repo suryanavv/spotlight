@@ -219,7 +219,7 @@ export default function Overview() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="opacity-70 group-hover:opacity-100 transition-opacity rounded-full"
+                      className="opacity-80 group-hover:opacity-100 transition-opacity rounded-full"
                       onClick={() => {
                         if (
                           item.name === "Full Name" ||

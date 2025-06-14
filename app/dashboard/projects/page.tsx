@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useClerkSupabaseClient } from "@/integrations/supabase/client"
 import { useUser } from '@clerk/nextjs'
 import type { Project } from "@/types/database"
@@ -38,6 +38,28 @@ export default function Projects() {
     technologies: "",
   })
 
+  const fetchProjects = useCallback(async () => {
+    if (!user || !supabase) return
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+      if (error) throw error
+      setProjects(data as Project[])
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error fetching projects")
+      } else {
+        toast.error("Error fetching projects")
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [user, supabase])
+
   useEffect(() => {
     fetchProjects()
     
@@ -49,25 +71,7 @@ export default function Projects() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
-  }, [user, supabase])
-
-  async function fetchProjects() {
-    if (!user || !supabase) return
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-      if (error) throw error
-      setProjects(data as Project[])
-    } catch (error: any) {
-      toast.error(error.message || "Error fetching projects")
-    } finally {
-      setLoading(false)
-    }
-  }
+  }, [user, supabase, fetchProjects])
 
   const handleOpenDialog = (project: Project | null = null) => {
     // Close any existing inline forms first
@@ -133,8 +137,12 @@ export default function Projects() {
 
       const imageUrl = publicUrlData.publicUrl
       setFormData((prev) => ({ ...prev, image_url: imageUrl }))
-    } catch (error: any) {
-      toast.error(error.message || "Error uploading image")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error uploading image")
+      } else {
+        toast.error("Error uploading image")
+      }
     } finally {
       setUploadingImage(false)
     }
@@ -165,8 +173,12 @@ export default function Projects() {
 
       handleCloseForm()
       fetchProjects()
-    } catch (error: any) {
-      toast.error(error.message || "Error saving project")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error saving project")
+      } else {
+        toast.error("Error saving project")
+      }
     }
   }
 
@@ -185,8 +197,12 @@ export default function Projects() {
       fetchProjects()
       setShowDeleteDialog(false)
       setDeletingId(null)
-    } catch (error: any) {
-      toast.error(error.message || "Error deleting project")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error deleting project")
+      } else {
+        toast.error("Error deleting project")
+      }
     } finally {
       setDeleting(false)
     }
@@ -533,8 +549,8 @@ export default function Projects() {
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
             <Button
-              variant="destructive"
-              className="h-7 rounded-full px-3 text-xs hover:bg-red-400 hover:text-gray-400 order-1 sm:order-2"
+              variant="default"
+              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
               onClick={confirmDelete}
               disabled={deleting}
             >

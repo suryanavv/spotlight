@@ -263,7 +263,7 @@ const Index = () => {
                 <Button
                   onClick={() => user ? router.push('/dashboard') : setAuthMode('sign-up')}
                   size="lg"
-                  variant="gradient"
+                  variant="default"
                   className="rounded-full px-6"
                 >
                   {user ? "Go to Dashboard" : "Get Started for Free"}
@@ -342,7 +342,7 @@ const Index = () => {
               </p>
               <Button
                 onClick={() => user ? router.push('/dashboard') : setAuthMode('sign-up')}
-                variant="gradient"
+                variant="default"
                 size="lg"
                 className="rounded-full px-6"
               >

@@ -85,8 +85,12 @@ export default function Templates() {
       toast.success(
         `Template changed to ${TEMPLATES.find((t) => t.id === templateId)?.name}`,
       );
-    } catch (error: any) {
-      toast.error(error.message || "Error changing template");
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error changing template");
+      } else {
+        toast.error("Error changing template");
+      }
     } finally {
       setLoading(false);
     }

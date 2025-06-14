@@ -134,8 +134,12 @@ export default function ProfileSettings() {
 
       if (error) throw error
       toast.success("Profile updated successfully")
-    } catch (error: any) {
-      toast.error(error.message || "Error updating profile")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error updating profile")
+      } else {
+        toast.error("Error updating profile")
+      }
     } finally {
       setLoading(false)
     }
@@ -173,8 +177,12 @@ export default function ProfileSettings() {
       // Update local state and refresh profile
       setFormData((prev) => ({ ...prev, avatar_url: avatarUrl }))
       toast.success("Profile picture updated successfully")
-    } catch (error: any) {
-      toast.error(error.message || "Error uploading avatar")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error uploading avatar")
+      } else {
+        toast.error("Error uploading avatar")
+      }
     } finally {
       setUploadingAvatar(false)
     }
@@ -193,8 +201,12 @@ export default function ProfileSettings() {
       setFormData((prev) => ({ ...prev, avatar_url: "" }))
       toast.success("Profile photo removed successfully")
       setShowRemoveDialog(false)
-    } catch (error: any) {
-      toast.error(error.message || "Error removing profile photo")
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error((error as { message?: string }).message || "Error removing profile photo")
+      } else {
+        toast.error("Error removing profile photo")
+      }
     } finally {
       setRemovingAvatar(false)
     }
@@ -255,7 +267,7 @@ export default function ProfileSettings() {
                     <Button
                       type="button"
                       size="sm"
-                      variant="destructive"
+                      variant="default"
                       className="h-7 rounded-full text-red-500 bg-red-50 hover:bg-red-100 px-3 text-xs mt-1"
                       title="Remove photo"
                       onClick={() => setShowRemoveDialog(true)}

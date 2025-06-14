@@ -1,8 +1,8 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function SsoCallback() {
+function SsoCallbackInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -13,4 +13,12 @@ export default function SsoCallback() {
   }, [router, searchParams]);
 
   return null;
+}
+
+export default function SsoCallback() {
+  return (
+    <Suspense>
+      <SsoCallbackInner />
+    </Suspense>
+  );
 } 
