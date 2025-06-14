@@ -212,7 +212,7 @@ const Index = () => {
             ) : (
               <>
                 <Button
-                  variant="gradient"
+                  variant="default"
                   size="sm"
                   onClick={() => setAuthMode('sign-in')}
                   className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"

@@ -12,6 +12,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider>
       <html lang="en">
+        <head>
+          <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+        </head>
         <body>
           <Toaster />
           {children}
