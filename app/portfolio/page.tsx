@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useClerkSupabaseClient } from '@/integrations/supabase/client';
