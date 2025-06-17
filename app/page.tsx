@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
-import { useUser, useClerk, SignIn, SignUp, UserProfile, UserButton, SignedIn, SignedOut, SignInButton } from '@clerk/nextjs'
+import { useUser, useClerk, UserProfile, UserButton, SignedIn } from '@clerk/nextjs'
 import { motion } from "framer-motion"
 import { ArrowRight, Check, Share2, X } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ParticleButton } from "@/components/ui/particle-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,13 +22,12 @@ import { useState, useEffect } from "react"
 const Index = () => {
   const { user } = useUser()
   const router = useRouter()
-  const { signOut } = useClerk()
-  const [authMode, setAuthMode] = useState<null | 'sign-in' | 'sign-up'>(null)
+  const { openSignIn, openSignUp } = useClerk()
   const [showProfile, setShowProfile] = useState(false)
 
   // Disable background scroll and dim background when popout is open
   useEffect(() => {
-    const popoutOpen = !!authMode || showProfile;
+    const popoutOpen = showProfile;
     if (popoutOpen) {
       document.body.style.overflow = 'hidden';
     } else {
@@ -36,17 +36,7 @@ const Index = () => {
     return () => {
       document.body.style.overflow = '';
     };
-  }, [authMode, showProfile]);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut()
-      toast.success("Signed out successfully")
-      setAuthMode('sign-in')
-    } catch (error) {
-      toast.error("Error signing out")
-    }
-  }
+  }, [showProfile]);
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -67,63 +57,6 @@ const Index = () => {
       description: "Share your portfolio with a single link and make a lasting impression.",
     },
   ]
-
-  // Custom popout for Clerk UI (click outside to close, dim background)
-  const renderAuthPopout = () => (
-    <>
-      {/* Dimmed overlay for outside click */}
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 50,
-          background: 'rgba(0,0,0,0.35)',
-        }}
-        onClick={() => setAuthMode(null)}
-        aria-label="Close authentication popout"
-      />
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 51,
-          minHeight: 100,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-        role="dialog"
-        aria-modal="true"
-        onClick={e => e.stopPropagation()}
-      >
-        {authMode === 'sign-in' ? (
-          <SignIn
-            appearance={{
-              variables: {
-                colorBackground: '#fff',
-                colorText: '#000',
-              },
-            }}
-            afterSignInUrl="/dashboard"
-            signUpUrl="/"
-          />
-        ) : (
-          <SignUp
-            appearance={{
-              variables: {
-                colorBackground: '#fff',
-                colorText: '#000',
-              },
-            }}
-            forceRedirectUrl="/dashboard"
-            signInUrl="/"
-          />
-        )}
-      </div>
-    </>
-  )
 
   const renderProfilePopout = () => (
     <>
@@ -168,7 +101,7 @@ const Index = () => {
             variant="link"
             size="sm"
             className="ml-2 h-auto p-0 text-xs font-normal text-primary-foreground underline"
-            onClick={() => setAuthMode('sign-up')}
+            onClick={() => user ? router.push('/dashboard') : openSignUp({ afterSignUpUrl: '/dashboard' })}
           >
             Check it out →
           </Button>
@@ -214,7 +147,7 @@ const Index = () => {
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => setAuthMode('sign-in')}
+                  onClick={() => openSignIn({ afterSignInUrl: '/dashboard' })}
                   className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
                 >
                   Log in
@@ -260,15 +193,16 @@ const Index = () => {
                 customizable templates. Join thousands of professionals advancing their careers.
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <Button
-                  onClick={() => user ? router.push('/dashboard') : setAuthMode('sign-up')}
+                <ParticleButton
+                  onClick={() => user ? router.push('/dashboard') : openSignUp({ afterSignUpUrl: '/dashboard' })}
                   size="lg"
                   variant="default"
                   className="rounded-full px-6"
                 >
-                  {user ? "Go to Dashboard" : "Get Started for Free"}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                  {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
+                  {/* <ArrowRight className="ml-2 h-4 w-4" /> */}
+                  <span className="ml-2">✦</span>
+                </ParticleButton>
               </div>
             </motion.div>            {/* Preview Image */}
             <motion.div
@@ -340,15 +274,16 @@ const Index = () => {
               <p className="mb-10 text-base text-muted-foreground max-w-lg mx-auto">
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
-              <Button
-                onClick={() => user ? router.push('/dashboard') : setAuthMode('sign-up')}
+              <ParticleButton
+                onClick={() => user ? router.push('/dashboard') : openSignUp({ afterSignUpUrl: '/dashboard' })}
                 variant="default"
                 size="lg"
                 className="rounded-full px-6"
               >
-                {user ? "Go to Dashboard" : "Create Your Portfolio"}
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
+                {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
+                {/* <ArrowRight className="ml-2 h-4 w-4" /> */}
+                <span className="ml-2">✦</span>
+              </ParticleButton>
             </motion.div>
           </div>
         </section>
@@ -366,7 +301,6 @@ const Index = () => {
         </div>
       </footer>
       {/* Clerk Auth Popout */}
-      {authMode && renderAuthPopout()}
       {showProfile && renderProfilePopout()}
     </div>
   )
