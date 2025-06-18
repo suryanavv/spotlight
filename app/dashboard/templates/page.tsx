@@ -82,9 +82,7 @@ export default function Templates() {
 
       setSelectedTemplate(templateId);
       await user.update({ unsafeMetadata: { ...user.unsafeMetadata, selected_template: templateId } });
-      toast.success(
-        `Template changed to ${TEMPLATES.find((t) => t.id === templateId)?.name}`,
-      );
+      toast.success(`Using ${TEMPLATES.find((t) => t.id === templateId)?.name} template!`);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'message' in error) {
         toast.error((error as { message?: string }).message || "Error changing template");

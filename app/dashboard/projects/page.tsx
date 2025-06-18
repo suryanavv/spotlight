@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useClerkSupabaseClient } from "@/integrations/supabase/client"
-import { useUser } from '@clerk/nextjs'
+import { useUser, useAuth } from '@clerk/nextjs'
 import type { Project } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -14,10 +14,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Pencil, Trash2, Plus, ExternalLink, Github, ImageIcon, X } from "lucide-react"
 import { motion } from "framer-motion"
+import { createClient } from "@supabase/supabase-js"
 
 export default function Projects() {
   const supabase = useClerkSupabaseClient()
   const { user } = useUser()
+  const { getToken } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -49,13 +51,9 @@ export default function Projects() {
         .order("created_at", { ascending: false })
       if (error) throw error
       setProjects(data as Project[])
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error fetching projects")
-      } else {
-        toast.error("Error fetching projects")
-      }
-    } finally {
+          } catch (error: unknown) {
+        // Silent error handling - user will see empty state
+      } finally {
       setLoading(false)
     }
   }, [user, supabase])
@@ -125,15 +123,31 @@ export default function Projects() {
 
     setUploadingImage(true)
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabaseUpload = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          },
+          auth: {
+            persistSession: false,
+          },
+        }
+      );
       const fileExt = file.name.split(".").pop()
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = `projects/${fileName}`
 
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(filePath, file)
+      const { error: uploadError } = await supabaseUpload.storage.from("portfolio").upload(filePath, file)
 
       if (uploadError) throw uploadError
 
-      const { data: publicUrlData } = supabase.storage.from("portfolio").getPublicUrl(filePath)
+      const { data: publicUrlData } = supabaseUpload.storage.from("portfolio").getPublicUrl(filePath)
 
       const imageUrl = publicUrlData.publicUrl
       setFormData((prev) => ({ ...prev, image_url: imageUrl }))
@@ -163,12 +177,12 @@ export default function Projects() {
         const { error } = await supabase.from("projects").update(projectData).eq("id", editingProject.id)
 
         if (error) throw error
-        toast.success("Project updated successfully")
+        toast.success("Project updated!")
       } else {
         const { error } = await supabase.from("projects").insert([projectData])
 
         if (error) throw error
-        toast.success("Project added successfully")
+        toast.success("Project added!")
       }
 
       handleCloseForm()
@@ -193,7 +207,7 @@ export default function Projects() {
     try {
       const { error } = await supabase.from("projects").delete().eq("id", deletingId)
       if (error) throw error
-      toast.success("Project deleted successfully")
+      toast.success("Project deleted!")
       fetchProjects()
       setShowDeleteDialog(false)
       setDeletingId(null)

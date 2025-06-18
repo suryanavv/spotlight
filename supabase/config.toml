@@ -1,1 +1,5 @@
 project_id = "iycblctxyhfdetorspct"
+
+[auth.third_party.clerk]
+enabled = true
+domain = "splendid-weevil-52.clerk.accounts.dev"

@@ -32,7 +32,10 @@ export interface Education {
   field_of_study: string | null;
   start_date: string | null;
   end_date: string | null;
+  current_education: boolean | null;
   description: string | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface Experience {
@@ -45,4 +48,6 @@ export interface Experience {
   start_date: string | null;
   end_date: string | null;
   current_job: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
 }

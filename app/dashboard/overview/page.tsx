@@ -55,7 +55,7 @@ export default function Overview() {
         if (experienceError) throw experienceError;
         setExperience(experienceData as Experience[]);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        // Error fetching data - will show loading state
       } finally {
         setLoading(false);
       }

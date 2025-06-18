@@ -15,6 +15,7 @@ import { Switch } from "@/components/ui/switch"
 import { format, parseISO } from "date-fns"
 import { Pencil, Trash2, Plus, Briefcase, MapPin, X } from "lucide-react"
 import { motion } from "framer-motion"
+import { MonthYearPicker } from "@/components/month-year-picker"
 
 export default function ExperiencePage() {
   const supabase = useClerkSupabaseClient();
@@ -29,12 +30,14 @@ export default function ExperiencePage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const currentDate = format(new Date(), 'yyyy-MM-dd')
+
   const [formData, setFormData] = useState({
     company: "",
     position: "",
     location: "",
-    start_date: "",
-    end_date: "",
+    start_date: "" as string | null,
+    end_date: "" as string | null,
     current_job: false,
     description: "",
   });
@@ -50,13 +53,9 @@ export default function ExperiencePage() {
         .order("end_date", { ascending: false });
       if (error) throw error;
       setExperienceList(data as Experience[]);
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error fetching experience data");
-      } else {
-        toast.error("Error fetching experience data");
-      }
-    } finally {
+          } catch (error: unknown) {
+        // Silent error handling - user will see empty state
+      } finally {
       setLoading(false);
     }
   }, [user, supabase]);
@@ -122,11 +121,28 @@ export default function ExperiencePage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleDateChange = (name: 'start_date' | 'end_date', date: string) => {
+    setFormData((prev) => {
+      const newFormData = { ...prev, [name]: date }
+      
+      // If start date is changed and it's after the current end date, clear end date
+      if (name === 'start_date' && newFormData.end_date && !newFormData.current_job) {
+        const startDate = parseISO(date)
+        const endDate = parseISO(newFormData.end_date)
+        if (startDate > endDate) {
+          newFormData.end_date = null
+        }
+      }
+      
+      return newFormData
+    })
+  }
+
   const handleSwitchChange = (checked: boolean) => {
     setFormData((prev) => ({
       ...prev,
       current_job: checked,
-      end_date: checked ? "" : prev.end_date,
+      end_date: checked ? null : prev.end_date,
     }))
   }
 
@@ -138,18 +154,21 @@ export default function ExperiencePage() {
       const experienceData = {
         ...formData,
         user_id: user.id,
+        // Convert empty strings to null for date fields
+        start_date: formData.start_date || null,
+        end_date: formData.current_job ? null : (formData.end_date || null),
       }
 
       if (editingExperience) {
         const { error } = await supabase.from("experience").update(experienceData).eq("id", editingExperience.id)
 
         if (error) throw error
-        toast.success("Experience updated successfully")
+        toast.success("Experience updated!")
       } else {
         const { error } = await supabase.from("experience").insert([experienceData])
 
         if (error) throw error
-        toast.success("Experience added successfully")
+        toast.success("Experience added!")
       }
 
       handleCloseForm()
@@ -175,7 +194,7 @@ export default function ExperiencePage() {
       if (!supabase) return;
       const { error } = await supabase.from("experience").delete().eq("id", deletingId)
       if (error) throw error
-      toast.success("Experience entry deleted successfully")
+      toast.success("Experience deleted!")
       fetchExperience()
       setShowDeleteDialog(false)
       setDeletingId(null)
@@ -194,8 +213,12 @@ export default function ExperiencePage() {
     if (!startDate) return ""
 
     const start = startDate ? format(parseISO(startDate), "MMM yyyy") : ""
-    const end = currentJob ? "Present" : endDate ? format(parseISO(endDate), "MMM yyyy") : ""
-
+    
+    if (currentJob) {
+      return `${start} - Present`
+    }
+    
+    const end = endDate ? format(parseISO(endDate), "MMM yyyy") : ""
     return `${start} - ${end}`
   }
 
@@ -267,27 +290,22 @@ export default function ExperiencePage() {
           <Label htmlFor="start_date" className="text-xs">
             Start Date
           </Label>
-          <Input
-            id="start_date"
-            name="start_date"
-            type="date"
-            value={formData.start_date}
-            onChange={handleChange}
-            className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+          <MonthYearPicker
+            date={formData.start_date}
+            onDateChange={(date) => handleDateChange('start_date', date)}
+            maxDate={currentDate}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="end_date" className="text-xs">
             End Date
           </Label>
-          <Input
-            id="end_date"
-            name="end_date"
-            type="date"
-            value={formData.end_date}
-            onChange={handleChange}
+          <MonthYearPicker
+            date={formData.end_date}
+            onDateChange={(date) => handleDateChange('end_date', date)}
             disabled={formData.current_job}
-            className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+            minDate={formData.start_date}
+            maxDate={currentDate}
           />
         </div>
       </div>
@@ -447,7 +465,7 @@ export default function ExperiencePage() {
                         onClick={() => handleOpenDialog(experience)}
                         className="h-7 rounded-full px-3 text-xs touch-manipulation"
                       >
-                        <Pencil size={14} />Edit
+                        <Pencil size={14} className="mr-1"/>Edit
                       </Button>
                       <Button
                         size="sm"
@@ -455,7 +473,7 @@ export default function ExperiencePage() {
                         onClick={() => handleDelete(experience.id)}
                         className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
                       >
-                        <Trash2 size={14} />Delete
+                        <Trash2 size={14} className="mr-1"/>Delete
                       </Button>
                     </div>
                   </CardFooter>

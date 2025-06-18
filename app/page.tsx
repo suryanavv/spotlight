@@ -101,7 +101,10 @@ const Index = () => {
             variant="link"
             size="sm"
             className="ml-2 h-auto p-0 text-xs font-normal text-primary-foreground underline"
-            onClick={() => user ? router.push('/dashboard') : openSignUp({ afterSignUpUrl: '/dashboard' })}
+            onClick={() => user ? router.push('/dashboard') : openSignUp({ 
+              afterSignUpUrl: '/dashboard',
+              redirectUrl: '/sso-callback'
+            })}
           >
             Check it out →
           </Button>
@@ -145,12 +148,26 @@ const Index = () => {
             ) : (
               <>
                 <Button
-                  variant="default"
+                  variant="outline"
                   size="sm"
-                  onClick={() => openSignIn({ afterSignInUrl: '/dashboard' })}
+                  onClick={() => openSignIn({ 
+                    afterSignInUrl: '/dashboard',
+                    redirectUrl: '/sso-callback'
+                  })}
                   className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
                 >
                   Log in
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => openSignUp({ 
+                    afterSignUpUrl: '/dashboard',
+                    redirectUrl: '/sso-callback'
+                  })}
+                  className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
+                >
+                  Sign up
                 </Button>
               </>
             )}
@@ -194,7 +211,10 @@ const Index = () => {
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <ParticleButton
-                  onClick={() => user ? router.push('/dashboard') : openSignUp({ afterSignUpUrl: '/dashboard' })}
+                  onClick={() => user ? router.push('/dashboard') : openSignUp({ 
+                    afterSignUpUrl: '/dashboard',
+                    redirectUrl: '/sso-callback'
+                  })}
                   size="lg"
                   variant="default"
                   className="rounded-full px-6"
@@ -275,7 +295,10 @@ const Index = () => {
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
               <ParticleButton
-                onClick={() => user ? router.push('/dashboard') : openSignUp({ afterSignUpUrl: '/dashboard' })}
+                onClick={() => user ? router.push('/dashboard') : openSignUp({ 
+                  afterSignUpUrl: '/dashboard',
+                  redirectUrl: '/sso-callback'
+                })}
                 variant="default"
                 size="lg"
                 className="rounded-full px-6"

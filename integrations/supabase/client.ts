@@ -1,41 +1,104 @@
-import { useEffect, useState } from "react";
+import { useMemo, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "./types";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export function useClerkSupabaseClient() {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
-  const [client, setClient] = useState<any>(null);
+  const { getToken, isSignedIn } = useAuth();
+
+  const supabaseClient = useMemo(() => {
+    if (isSignedIn) {
+      return createClient<Database>(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+        global: {
+          fetch: async (url: RequestInfo | URL, options?: RequestInit) => {
+            try {
+              const token = await getToken({ template: "supabase" });
+              
+              if (!token) {
+                console.error('No token received from Clerk');
+                throw new Error('Authentication token not available');
+              }
+
+              const headers = new Headers(options?.headers);
+              headers.set("Authorization", `Bearer ${token}`);
+              headers.set("Accept", "application/json");
+
+              return fetch(url, {
+                ...options,
+                headers,
+              });
+            } catch (error) {
+              console.error('Error getting token:', error);
+              throw error;
+            }
+          },
+        },
+      });
+    }
+    // if not signed in, return a client without an auth header
+    return createClient<Database>(SUPABASE_URL!, SUPABASE_ANON_KEY!);
+  }, [isSignedIn, getToken]);
+
+  return supabaseClient;
+}
+
+// Hook to automatically initialize user profile when they first sign up
+export function useInitializeUserProfile() {
+  const { user, isLoaded } = useUser();
+  const { isSignedIn } = useAuth();
+  const supabase = useClerkSupabaseClient();
 
   useEffect(() => {
-    async function setup() {
-      // If Clerk is loaded and user is signed in, use token
-      if (isLoaded && isSignedIn) {
-        const token = await getToken({ template: "supabase" });
-        const supabase = createClient<Database>(
-          SUPABASE_URL!,
-          SUPABASE_ANON_KEY!,
-          {
-            global: {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json",
-              },
-            },
+    if (!isLoaded || !isSignedIn || !user || !supabase) return;
+
+    async function initializeUserProfile() {
+      try {
+        // Check if profile already exists
+        const { data: existingProfile, error: fetchError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no rows exist
+
+        if (!existingProfile) {
+          
+          // Profile doesn't exist, create it with Google account data as defaults
+          const defaultProfile = {
+            id: user.id,
+            full_name: user.fullName || user.firstName + (user.lastName ? ` ${user.lastName}` : '') || '',
+            headline: '',
+            bio: '',
+            location: '',
+            website: '',
+            github: '',
+            linkedin: '',
+            twitter: '',
+            avatar_url: user.imageUrl || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          const { data: insertData, error: insertError } = await supabase
+            .from('user_profiles')
+            .insert([defaultProfile])
+            .select();
+
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+            toast.error('Error creating profile: ' + insertError.message);
           }
-        );
-        setClient(supabase);
-      } else {
-        // Otherwise, create a public client (no auth header)
-        const supabase = createClient<Database>(SUPABASE_URL!, SUPABASE_ANON_KEY!);
-        setClient(supabase);
+          // No success toast needed - profile creation should be silent
+        }
+      } catch (error) {
+        console.error('Error initializing user profile:', error);
+        toast.error('Error loading profile');
       }
     }
-    setup();
-  }, [getToken, isLoaded, isSignedIn]);
 
-  return client;
+    initializeUserProfile();
+  }, [isLoaded, isSignedIn, user, supabase]);
 } 

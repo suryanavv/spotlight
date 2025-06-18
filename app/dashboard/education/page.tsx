@@ -11,9 +11,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Switch } from "@/components/ui/switch"
 import { format, parseISO } from "date-fns"
 import { Pencil, Trash2, Plus, GraduationCap, X } from "lucide-react"
 import { motion } from "framer-motion"
+import { MonthYearPicker } from "@/components/month-year-picker"
 
 export default function EducationPage() {
   const supabase = useClerkSupabaseClient();
@@ -28,12 +30,15 @@ export default function EducationPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  const currentDate = format(new Date(), 'yyyy-MM-dd')
+
   const [formData, setFormData] = useState({
     institution: "",
     degree: "",
     field_of_study: "",
-    start_date: "",
-    end_date: "",
+    start_date: "" as string | null,
+    end_date: "" as string | null,
+    current_education: false,
     description: "",
   });
 
@@ -48,13 +53,9 @@ export default function EducationPage() {
         .order("end_date", { ascending: false });
       if (error) throw error;
       setEducationList(data as Education[]);
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error fetching education data");
-      } else {
-        toast.error("Error fetching education data");
-      }
-    } finally {
+          } catch (error: unknown) {
+        // Silent error handling - user will see empty state
+      } finally {
       setLoading(false);
     }
   }, [user, supabase]);
@@ -86,6 +87,7 @@ export default function EducationPage() {
         field_of_study: education.field_of_study || "",
         start_date: education.start_date || "",
         end_date: education.end_date || "",
+        current_education: education.current_education || false,
         description: education.description || "",
       })
     } else {
@@ -96,6 +98,7 @@ export default function EducationPage() {
         field_of_study: "",
         start_date: "",
         end_date: "",
+        current_education: false,
         description: "",
       })
     }
@@ -118,6 +121,31 @@ export default function EducationPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleDateChange = (name: 'start_date' | 'end_date', date: string) => {
+    setFormData((prev) => {
+      const newFormData = { ...prev, [name]: date }
+      
+      // If start date is changed and it's after the current end date, clear end date
+      if (name === 'start_date' && newFormData.end_date && !newFormData.current_education) {
+        const startDate = parseISO(date)
+        const endDate = parseISO(newFormData.end_date)
+        if (startDate > endDate) {
+          newFormData.end_date = null
+        }
+      }
+      
+      return newFormData
+    })
+  }
+
+  const handleSwitchChange = (checked: boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      current_education: checked,
+      end_date: checked ? null : prev.end_date,
+    }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user) return
@@ -126,6 +154,9 @@ export default function EducationPage() {
       const educationData = {
         ...formData,
         user_id: user.id,
+        // Convert empty strings to null for date fields
+        start_date: formData.start_date || null,
+        end_date: formData.current_education ? null : (formData.end_date || null),
       }
 
       if (editingEducation) {
@@ -135,14 +166,14 @@ export default function EducationPage() {
           .eq("id", editingEducation.id)
 
         if (error) throw error
-        toast.success("Education updated successfully")
+        toast.success("Education updated!")
       } else {
         const { error } = await supabase
           .from("education")
           .insert([educationData])
 
         if (error) throw error
-        toast.success("Education added successfully")
+        toast.success("Education added!")
       }
 
       handleCloseForm()
@@ -167,7 +198,7 @@ export default function EducationPage() {
     try {
       const { error } = await supabase.from("education").delete().eq("id", deletingId)
       if (error) throw error
-      toast.success("Education entry deleted successfully")
+      toast.success("Education deleted!")
       fetchEducation()
       setShowDeleteDialog(false)
       setDeletingId(null)
@@ -182,12 +213,16 @@ export default function EducationPage() {
     }
   }
 
-  function formatDateRange(startDate?: string | null, endDate?: string | null) {
+  function formatDateRange(startDate?: string | null, endDate?: string | null, currentEducation?: boolean | null) {
     if (!startDate) return "Present"
 
     const start = startDate ? format(parseISO(startDate), "MMM yyyy") : ""
-    const end = endDate ? format(parseISO(endDate), "MMM yyyy") : "Present"
+    
+    if (currentEducation) {
+      return `${start} - Present`
+    }
 
+    const end = endDate ? format(parseISO(endDate), "MMM yyyy") : "Present"
     return `${start} - ${end}`
   }
 
@@ -259,29 +294,31 @@ export default function EducationPage() {
           <Label htmlFor="start_date" className="text-xs">
             Start Date
           </Label>
-          <Input
-            id="start_date"
-            name="start_date"
-            type="date"
-            value={formData.start_date}
-            onChange={handleChange}
-            className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+          <MonthYearPicker
+            date={formData.start_date}
+            onDateChange={(date) => handleDateChange('start_date', date)}
+            maxDate={currentDate}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="end_date" className="text-xs">
             End Date
           </Label>
-          <Input
-            id="end_date"
-            name="end_date"
-            type="date"
-            value={formData.end_date}
-            onChange={handleChange}
-            placeholder="Leave blank if still studying"
-            className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+          <MonthYearPicker
+            date={formData.end_date}
+            onDateChange={(date) => handleDateChange('end_date', date)}
+            disabled={formData.current_education}
+            minDate={formData.start_date}
+            maxDate={currentDate}
           />
         </div>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch id="current_education" checked={formData.current_education} onCheckedChange={handleSwitchChange} />
+        <Label htmlFor="current_education" className="text-xs">
+          I am currently studying here
+        </Label>
       </div>
 
       <div className="space-y-2">
@@ -403,7 +440,7 @@ export default function EducationPage() {
                       <div>
                         <div>{education.institution}</div>
                         <div className="mt-1 text-xs font-normal text-gray-500">
-                          {formatDateRange(education.start_date, education.end_date)}
+                          {formatDateRange(education.start_date, education.end_date, education.current_education)}
                         </div>
                       </div>
                     </CardTitle>
@@ -431,7 +468,7 @@ export default function EducationPage() {
                         onClick={() => handleOpenDialog(education)}
                         className="h-7 rounded-full px-3 text-xs touch-manipulation"
                       >
-                        <Pencil size={14} />Edit
+                        <Pencil size={14} className="mr-1"/>Edit
                       </Button>
                       <Button
                         size="sm"
@@ -439,7 +476,7 @@ export default function EducationPage() {
                         onClick={() => handleDelete(education.id)}
                         className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
                       >
-                        <Trash2 size={14} />Delete
+                        <Trash2 size={14} className="mr-1"/>Delete
                       </Button>
                     </div>
                   </CardFooter>

@@ -6,11 +6,11 @@ import { useRouter, usePathname } from "next/navigation"
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useEffect, useState } from "react"
 import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X } from "lucide-react"
-import Logo from '/placeholder.svg'
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
+import { useInitializeUserProfile } from "@/integrations/supabase/client"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -23,6 +23,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Initialize user profile automatically when they first access dashboard
+  useInitializeUserProfile()
 
   // Collapse sidebar on mobile by default
   useEffect(() => {

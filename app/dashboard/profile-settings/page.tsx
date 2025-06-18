@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useClerkSupabaseClient } from "@/integrations/supabase/client"
-import { useUser } from '@clerk/nextjs'
+import { useUser, useAuth } from '@clerk/nextjs'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,10 +13,12 @@ import { Label } from "@/components/ui/label"
 import { Upload, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { createClient } from "@supabase/supabase-js"
 
 export default function ProfileSettings() {
   const supabase = useClerkSupabaseClient()
   const { user } = useUser()
+  const { getToken } = useAuth()
   const [loading, setLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showRemoveDialog, setShowRemoveDialog] = useState(false)
@@ -36,62 +38,75 @@ export default function ProfileSettings() {
 
   useEffect(() => {
     if (!user || !supabase) return;
-    async function fetchProfile() {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', user!.id)
-        .single();
-      if (data) {
-        setFormData({
-          full_name: data.full_name || '',
-          headline: data.headline || '',
-          bio: data.bio || '',
-          location: data.location || '',
-          website: data.website || '',
-          github: data.github || '',
-          linkedin: data.linkedin || '',
-          twitter: data.twitter || '',
-          avatar_url: data.avatar_url || user!.imageUrl || '',
-        });
-      } else {
-        setFormData({
-          full_name: user!.fullName || '',
-          headline: user!.unsafeMetadata.headline as string || '',
-          bio: user!.unsafeMetadata.bio as string || '',
-          location: user!.unsafeMetadata.location as string || '',
-          website: user!.unsafeMetadata.website as string || '',
-          github: user!.unsafeMetadata.github as string || '',
-          linkedin: user!.unsafeMetadata.linkedin as string || '',
-          twitter: user!.unsafeMetadata.twitter as string || '',
-          avatar_url: user!.imageUrl || '',
-        });
-      }
-    }
-    fetchProfile();
-  }, [user, supabase]);
 
-  useEffect(() => {
-    if (!user || !supabase) return;
-    async function ensureProfile() {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('id', user!.id)
-        .single();
+    async function initializeProfile() {
+      try {
+        // First, try to fetch existing profile
+        const { data: existingProfile, error: fetchError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle(); // Use maybeSingle to avoid errors when no profile exists
 
-      if (!data) {
-        const { error: insertError } = await supabase.from('user_profiles').insert({
-          id: user!.id,
-          full_name: user!.fullName,
-          avatar_url: user!.imageUrl,
-        });
-        if (insertError) {
-          console.error('Insert error:', insertError);
+        if (existingProfile) {
+          // Profile exists, use it
+          setFormData({
+            full_name: existingProfile.full_name || '',
+            headline: existingProfile.headline || '',
+            bio: existingProfile.bio || '',
+            location: existingProfile.location || '',
+            website: existingProfile.website || '',
+            github: existingProfile.github || '',
+            linkedin: existingProfile.linkedin || '',
+            twitter: existingProfile.twitter || '',
+            avatar_url: existingProfile.avatar_url || user.imageUrl || '',
+          });
+        } else {
+          // Profile doesn't exist, create it with Google account data as defaults
+          const defaultProfile = {
+            id: user.id,
+            full_name: user.fullName || user.firstName + (user.lastName ? ` ${user.lastName}` : '') || '',
+            headline: '',
+            bio: '',
+            location: '',
+            website: '',
+            github: '',
+            linkedin: '',
+            twitter: '',
+            avatar_url: user.imageUrl || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          // Insert the new profile
+          const { error: insertError } = await supabase
+            .from('user_profiles')
+            .insert([defaultProfile]);
+
+          if (insertError) {
+            toast.error('Error creating profile: ' + insertError.message);
+          }
+          // Profile creation success is silent - no toast needed
+
+          // Set form data with defaults
+          setFormData({
+            full_name: defaultProfile.full_name,
+            headline: defaultProfile.headline,
+            bio: defaultProfile.bio,
+            location: defaultProfile.location,
+            website: defaultProfile.website,
+            github: defaultProfile.github,
+            linkedin: defaultProfile.linkedin,
+            twitter: defaultProfile.twitter,
+            avatar_url: defaultProfile.avatar_url,
+          });
         }
+      } catch (error) {
+        toast.error('Error loading profile');
       }
     }
-    ensureProfile();
+
+    initializeProfile();
   }, [user, supabase]);
 
   // Show loading spinner if supabase client is not ready
@@ -113,30 +128,31 @@ export default function ProfileSettings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user) return
+    if (!user || !supabase) return
 
     setLoading(true)
     try {
-      // Check if profile exists first
-      const { data: existingProfile } = await supabase.from("user_profiles").select("id").eq("id", user.id).single()
+      const profileData = {
+        ...formData,
+        id: user.id,
+        updated_at: new Date().toISOString(),
+      };
 
-      let operation
+      // Use upsert to either insert or update
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .upsert(profileData, {
+          onConflict: 'id'
+        })
+        .select();
 
-      if (existingProfile) {
-        // Update existing profile
-        operation = supabase.from("user_profiles").update(formData).eq("id", user.id)
-      } else {
-        // Insert new profile
-        operation = supabase.from("user_profiles").insert({ ...formData, id: user.id })
+      if (error) {
+        throw error;
       }
-
-      const { error } = await operation
-
-      if (error) throw error
-      toast.success("Profile updated successfully")
+      toast.success("Profile updated!")
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error updating profile")
+        toast.error("Error updating profile: " + (error as { message?: string }).message)
       } else {
         toast.error("Error updating profile")
       }
@@ -151,35 +167,64 @@ export default function ProfileSettings() {
 
     setUploadingAvatar(true)
     try {
+      const token = await getToken({ template: "supabase" });
+      const supabaseUpload = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          },
+          auth: {
+            persistSession: false,
+          },
+        }
+      );
+
       // Create a unique file name
       const fileExt = file.name.split(".").pop()
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = `avatars/${fileName}`
 
       // Upload the file to Supabase Storage
-      const { error: uploadError } = await supabase.storage.from("portfolio").upload(filePath, file)
+      const { error: uploadError } = await supabaseUpload.storage.from("portfolio").upload(filePath, file)
 
       if (uploadError) throw uploadError
 
       // Get the public URL
-      const { data: publicUrlData } = supabase.storage.from("portfolio").getPublicUrl(filePath)
+      const { data: publicUrlData } = supabaseUpload.storage.from("portfolio").getPublicUrl(filePath)
 
       // Update the profile with the new avatar URL
       const avatarUrl = publicUrlData.publicUrl
 
       const { error: updateError } = await supabase
         .from("user_profiles")
-        .update({ avatar_url: avatarUrl })
+        .update({ 
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", user.id)
 
       if (updateError) throw updateError
 
+      // Update Clerk profile image as well
+      try {
+        await user.setProfileImage({ file });
+        await user.reload();
+      } catch (clerkError) {
+        // Clerk update failed but Supabase succeeded - not critical
+      }
+
       // Update local state and refresh profile
       setFormData((prev) => ({ ...prev, avatar_url: avatarUrl }))
-      toast.success("Profile picture updated successfully")
+      toast.success("Profile picture updated!")
     } catch (error: unknown) {
+
       if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error uploading avatar")
+        toast.error("Error uploading avatar: " + (error as { message?: string }).message)
       } else {
         toast.error("Error uploading avatar")
       }
@@ -195,15 +240,19 @@ export default function ProfileSettings() {
       // Remove avatar_url from profile
       const { error } = await supabase
         .from("user_profiles")
-        .update({ avatar_url: "" })
+        .update({ 
+          avatar_url: "",
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", user.id)
       if (error) throw error
       setFormData((prev) => ({ ...prev, avatar_url: "" }))
-      toast.success("Profile photo removed successfully")
+      toast.success("Profile photo removed!")
       setShowRemoveDialog(false)
     } catch (error: unknown) {
+
       if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error removing profile photo")
+        toast.error("Error removing profile photo: " + (error as { message?: string }).message)
       } else {
         toast.error("Error removing profile photo")
       }
@@ -249,8 +298,9 @@ export default function ProfileSettings() {
                   <Button
                     type="button"
                     size="sm"
-                    variant="secondary"
-                    className="h-7 inline-flex items-center gap-2 px-3 py-1.5 text-xs rounded-full cursor-pointer"
+                    variant="default"
+                    className="h-7 rounded-full text-black bg-gray-50 hover:bg-gray-100 px-3 text-xs"
+                    title="Change photo"
                     onClick={() => document.getElementById('avatar')?.click()}
                     disabled={uploadingAvatar}
                     aria-label="Change profile photo"
@@ -259,7 +309,7 @@ export default function ProfileSettings() {
                       "Uploading..."
                     ) : (
                       <>
-                        <Upload size={14} /> Change Photo
+                        <Upload size={14} className="mr-1" /> Change Photo
                       </>
                     )}
                   </Button>
@@ -268,13 +318,13 @@ export default function ProfileSettings() {
                       type="button"
                       size="sm"
                       variant="default"
-                      className="h-7 rounded-full text-red-500 bg-red-50 hover:bg-red-100 px-3 text-xs mt-1"
+                      className="h-7 rounded-full text-red-500 bg-red-50 hover:bg-red-100 px-3 text-xs"
                       title="Remove photo"
                       onClick={() => setShowRemoveDialog(true)}
                       disabled={uploadingAvatar || removingAvatar}
                       aria-label="Remove profile photo"
                     >
-                      <Trash2 size={16} className="mr-1" /> Remove Photo
+                      <Trash2 size={14} className="mr-1" /> Remove Photo
                     </Button>
                   )}
                 </div>
