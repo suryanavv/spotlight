@@ -5,7 +5,7 @@ import type React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useEffect, useState } from "react"
-import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X } from "lucide-react"
+import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
@@ -206,9 +206,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   )
                 })}
                 <Button
-                  variant="outline"
+                  variant="link"
                   size="sm"
                   className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-gray-600 hover:bg-gray-100 hover:text-gray-900 mt-1"
+                  onClick={() => router.push(`/portfolio/${user?.id}`)}
+                >
+                  <Share2 size={16} className="mr-2" />
+                  View Public Portfolio
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   onClick={handleLogout}
                 >
                   <LogOut size={16} className="mr-2" />
@@ -285,6 +294,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </ul>
             </motion.nav>
             <div className="absolute bottom-0 left-0 right-0 p-2">
+              <Button
+                variant="link"
+                size="sm"
+                className="w-full flex items-center gap-2 justify-start rounded-md text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 mb-1"
+                onClick={() => router.push(`/portfolio/${user?.id}`)}
+              >
+                <Share2 size={14} />
+                View Public Portfolio
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

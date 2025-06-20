@@ -14,12 +14,14 @@ import { Upload, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { createClient } from "@supabase/supabase-js"
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 export default function ProfileSettings() {
   const supabase = useClerkSupabaseClient()
   const { user } = useUser()
   const { getToken } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showRemoveDialog, setShowRemoveDialog] = useState(false)
   const [removingAvatar, setRemovingAvatar] = useState(false)
@@ -40,13 +42,20 @@ export default function ProfileSettings() {
     if (!user || !supabase) return;
 
     async function initializeProfile() {
+      setPageLoading(true);
       try {
         // First, try to fetch existing profile
         const { data: existingProfile, error: fetchError } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('id', user.id)
-          .maybeSingle(); // Use maybeSingle to avoid errors when no profile exists
+          .maybeSingle();
+
+        if (fetchError) {
+          console.error('Error fetching user profile:', fetchError);
+          toast.error('Error loading profile');
+          return;
+        }
 
         if (existingProfile) {
           // Profile exists, use it
@@ -78,13 +87,24 @@ export default function ProfileSettings() {
             updated_at: new Date().toISOString(),
           };
 
-          // Insert the new profile
-          const { error: insertError } = await supabase
+          // Use upsert to handle race conditions where profile might be created by another process
+          const { error: upsertError } = await supabase
             .from('user_profiles')
-            .insert([defaultProfile]);
+            .upsert([defaultProfile], {
+              onConflict: 'id',
+              ignoreDuplicates: false
+            });
 
-          if (insertError) {
-            toast.error('Error creating profile: ' + insertError.message);
+          if (upsertError) {
+            // Only show error if it's not a duplicate key constraint
+            if (!upsertError.message.includes('duplicate key') && 
+                !upsertError.message.includes('unique constraint')) {
+              console.error('Error creating user profile:', upsertError);
+              toast.error('Error creating profile: ' + upsertError.message);
+            } else {
+              // If it's a duplicate key error, the profile was already created elsewhere
+              console.log('Profile already exists, which is expected in some cases');
+            }
           }
           // Profile creation success is silent - no toast needed
 
@@ -103,22 +123,17 @@ export default function ProfileSettings() {
         }
       } catch (error) {
         toast.error('Error loading profile');
+      } finally {
+        setPageLoading(false);
       }
     }
 
     initializeProfile();
   }, [user, supabase]);
 
-  // Show loading spinner if supabase client is not ready
-  if (!supabase) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading Profile Settings...</p>
-        </div>
-      </div>
-    );
+  // Show loading spinner if supabase client is not ready or page is loading
+  if (pageLoading) {
+    return <LoadingSpinner text="Loading Profile Settings..." />;
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

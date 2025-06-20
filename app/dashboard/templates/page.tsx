@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 type Template = {
   id: string;
@@ -56,15 +57,8 @@ export default function Templates() {
   }, [user]);
 
   // Show loading spinner if supabase client is not ready
-  if (!supabase) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading Templates...</p>
-        </div>
-      </div>
-    );
+  if (!supabase || !user) {
+    return <LoadingSpinner text="Loading Templates..." />;
   }
 
   const handleTemplateSelect = async (templateId: string) => {

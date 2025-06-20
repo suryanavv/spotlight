@@ -15,6 +15,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Pencil, Trash2, Plus, ExternalLink, Github, ImageIcon, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { createClient } from "@supabase/supabase-js"
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function Projects() {
   const supabase = useClerkSupabaseClient()
@@ -70,6 +71,10 @@ export default function Projects() {
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
   }, [user, supabase, fetchProjects])
+
+  if (loading) {
+    return <LoadingSpinner text="Loading Projects..." />;
+  }
 
   const handleOpenDialog = (project: Project | null = null) => {
     // Close any existing inline forms first

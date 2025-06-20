@@ -55,14 +55,26 @@ export function useInitializeUserProfile() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user || !supabase) return;
 
+    let isInitializing = false; // Prevent multiple simultaneous initializations
+
     async function initializeUserProfile() {
+      if (isInitializing) return;
+      isInitializing = true;
       try {
+        // Add a small delay to prevent immediate race conditions
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Check if profile already exists
         const { data: existingProfile, error: fetchError } = await supabase
           .from('user_profiles')
           .select('id')
           .eq('id', user.id)
           .maybeSingle(); // Use maybeSingle instead of single to avoid errors when no rows exist
+
+        if (fetchError) {
+          console.error('Error fetching user profile:', fetchError);
+          return; // Exit early if we can't check for existing profile
+        }
 
         if (!existingProfile) {
           
@@ -82,20 +94,31 @@ export function useInitializeUserProfile() {
             updated_at: new Date().toISOString(),
           };
 
-          const { data: insertData, error: insertError } = await supabase
+          // Use upsert to handle race conditions where profile might be created by another process
+          const { data: upsertData, error: upsertError } = await supabase
             .from('user_profiles')
-            .insert([defaultProfile])
+            .upsert([defaultProfile], {
+              onConflict: 'id',
+              ignoreDuplicates: false
+            })
             .select();
 
-          if (insertError) {
-            console.error('Error creating user profile:', insertError);
-            toast.error('Error creating profile: ' + insertError.message);
+          if (upsertError) {
+            // Only show error if it's not a duplicate key constraint
+            if (!upsertError.message.includes('duplicate key') && 
+                !upsertError.message.includes('unique constraint')) {
+              console.error('Error creating user profile:', upsertError);
+              toast.error('Error creating profile: ' + upsertError.message);
+            }
+            // If it's a duplicate key error, the profile was already created elsewhere, which is fine
           }
           // No success toast needed - profile creation should be silent
         }
       } catch (error) {
         console.error('Error initializing user profile:', error);
         toast.error('Error loading profile');
+      } finally {
+        isInitializing = false;
       }
     }
 

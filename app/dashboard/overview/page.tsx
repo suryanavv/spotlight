@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Share2, Briefcase, GraduationCap, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from "framer-motion";
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function Overview() {
   const { user } = useUser();
@@ -65,14 +66,7 @@ export default function Overview() {
   }, [user, supabase]);
 
   if (!supabase || loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text="Loading your dashboard..." />;
   }
 
   // Calculate profile completion percentage
@@ -93,16 +87,16 @@ export default function Overview() {
   return (
     <div className="space-y-4 mt-16 md:mt-0 pt-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard Overview</h1>
+        <h1 className="text-lg font-medium">Dashboard Overview</h1>
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button
           onClick={() => router.push(`/portfolio/${user?.id}`)}
           variant="secondary"
           size="sm"
-          className="flex items-center rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
+          className="flex items-center text-xs rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
         >
-          <Share2 size={16} />
+          <Share2 size={16} className="mr-1"/>
           View Public Portfolio
         </Button>
       </div>
@@ -115,7 +109,7 @@ export default function Overview() {
             count: projects.length,
             icon: <FileText size={18} className="text-primary" />,
             path: "/dashboard/projects",
-            description: "Manage your portfolio projects"
+            description: "Manage and showcase your portfolio projects",
           },
           {
             title: "Education",

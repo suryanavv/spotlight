@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { useUser, useClerk, UserProfile, UserButton, SignedIn } from '@clerk/nextjs'
 import { motion } from "framer-motion"
-import { ArrowRight, Check, Share2, X } from 'lucide-react'
+import { ArrowRight, Check, Share2, LayoutDashboard} from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ParticleButton } from "@/components/ui/particle-button";
 import {
@@ -140,6 +140,15 @@ const Index = () => {
                   <Share2 size={12} />
                   <span>View Portfolio</span>
                 </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => router.push('/dashboard')}
+                  className="hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs sm:flex"
+                >
+                   <LayoutDashboard size={12}/>
+                  <span>Dashboard</span>
+                </Button>
 
                 <SignedIn>
                   <UserButton afterSignOutUrl="/" />
@@ -156,7 +165,7 @@ const Index = () => {
                   })}
                   className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
                 >
-                  Log in
+                  Sign in
                 </Button>
                 <Button
                   variant="default"
@@ -217,7 +226,7 @@ const Index = () => {
                   })}
                   size="lg"
                   variant="default"
-                  className="rounded-full px-6"
+                  className="rounded-full"
                 >
                   {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
                   {/* <ArrowRight className="ml-2 h-4 w-4" /> */}
@@ -301,7 +310,7 @@ const Index = () => {
                 })}
                 variant="default"
                 size="lg"
-                className="rounded-full px-6"
+                className="rounded-full"
               >
                 {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
                 {/* <ArrowRight className="ml-2 h-4 w-4" /> */}

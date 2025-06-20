@@ -16,6 +16,7 @@ import { format, parseISO } from "date-fns"
 import { Pencil, Trash2, Plus, Briefcase, MapPin, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { MonthYearPicker } from "@/components/month-year-picker"
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 export default function ExperiencePage() {
   const supabase = useClerkSupabaseClient();
@@ -72,6 +73,10 @@ export default function ExperiencePage() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, [user, supabase, fetchExperience]);
+
+  if (loading) {
+    return <LoadingSpinner text="Loading Experience..." />;
+  }
 
   const handleOpenDialog = (experience: Experience | null = null) => {
     // Close any existing inline forms first
@@ -394,7 +399,7 @@ export default function ExperiencePage() {
               <Briefcase size={20} className="text-gray-400" />
             </div>
             <h3 className="text-sm font-medium">No work experience yet</h3>
-            <p className="mt-1 text-xs text-gray-500">Add your work experience to showcase your professional journey</p>
+            <p className="mt-1 text-xs text-gray-500">Showcase your professional experience</p>
             <Button className="mt-3 h-7 rounded-full px-3 text-xs touch-manipulation" variant="outline" onClick={() => handleOpenDialog()}>
               <Plus className="mr-1.5 h-3.5 w-3.5" />
               Add Experience
