@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useClerkSupabaseClient } from "@/integrations/supabase/client"
+import { useProjects, useProjectMutations } from "@/lib/hooks/useQueries"
 import { useUser, useAuth } from '@clerk/nextjs'
 import type { Project } from "@/types/database"
 import { toast } from "sonner"
@@ -15,14 +15,16 @@ import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Pencil, Trash2, Plus, ExternalLink, Github, ImageIcon, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { createClient } from "@supabase/supabase-js"
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ProjectsSkeleton } from '@/components/ui/skeletons'
 
 export default function Projects() {
-  const supabase = useClerkSupabaseClient()
   const { user } = useUser()
   const { getToken } = useAuth()
-  const [projects, setProjects] = useState<Project[]>([])
-  const [loading, setLoading] = useState(true)
+  
+  // Use React Query hooks for data fetching and mutations
+  const { data: projects = [], isInitialLoading, hasData, error } = useProjects()
+  const { createProject, updateProject, deleteProject } = useProjectMutations()
+  
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -30,7 +32,6 @@ export default function Projects() {
   const [showInlineForm, setShowInlineForm] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
 
   const [formData, setFormData] = useState({
     title: "",
@@ -41,27 +42,7 @@ export default function Projects() {
     technologies: "",
   })
 
-  const fetchProjects = useCallback(async () => {
-    if (!user || !supabase) return
-    try {
-      setLoading(true)
-      const { data, error } = await supabase
-        .from("projects")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-      if (error) throw error
-      setProjects(data as Project[])
-          } catch (error: unknown) {
-        // Silent error handling - user will see empty state
-      } finally {
-      setLoading(false)
-    }
-  }, [user, supabase])
-
   useEffect(() => {
-    fetchProjects()
-    
     // Check if mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
@@ -70,10 +51,29 @@ export default function Projects() {
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
-  }, [user, supabase, fetchProjects])
+  }, [])
 
-  if (loading) {
-    return <LoadingSpinner text="Loading Projects..." />;
+  // Show skeleton only on initial load when no cached data exists.
+  // On navigation, if we have cached data, show it immediately.
+  if (isInitialLoading && !hasData) {
+    return <ProjectsSkeleton />
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Failed to load projects</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-2"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const handleOpenDialog = (project: Project | null = null) => {
@@ -179,25 +179,15 @@ export default function Projects() {
       }
 
       if (editingProject) {
-        const { error } = await supabase.from("projects").update(projectData).eq("id", editingProject.id)
-
-        if (error) throw error
-        toast.success("Project updated!")
+        await updateProject.mutateAsync({ id: editingProject.id, ...projectData })
       } else {
-        const { error } = await supabase.from("projects").insert([projectData])
-
-        if (error) throw error
-        toast.success("Project added!")
+        await createProject.mutateAsync(projectData)
       }
 
       handleCloseForm()
-      fetchProjects()
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error saving project")
-      } else {
-        toast.error("Error saving project")
-      }
+      // Error handling is done in the mutation hooks
+      console.error('Error submitting project:', error)
     }
   }
 
@@ -208,22 +198,13 @@ export default function Projects() {
 
   const confirmDelete = async () => {
     if (!deletingId) return
-    setDeleting(true)
     try {
-      const { error } = await supabase.from("projects").delete().eq("id", deletingId)
-      if (error) throw error
-      toast.success("Project deleted!")
-      fetchProjects()
+      await deleteProject.mutateAsync(deletingId)
       setShowDeleteDialog(false)
       setDeletingId(null)
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error deleting project")
-      } else {
-        toast.error("Error deleting project")
-      }
-    } finally {
-      setDeleting(false)
+      // Error handling is done in the mutation hook
+      console.error('Error deleting project:', error)
     }
   }
 
@@ -357,26 +338,14 @@ export default function Projects() {
         </Button>
         <Button 
           type="submit" 
-          disabled={uploadingImage} 
+          disabled={createProject.isPending || updateProject.isPending || uploadingImage} 
           className="h-8 rounded-full px-3 text-xs touch-manipulation"
         >
-          {editingProject ? "Save Changes" : "Add Project"}
+          {createProject.isPending || updateProject.isPending ? "Saving..." : editingProject ? "Save Changes" : "Add Project"}
         </Button>
       </div>
     </form>
   )
-
-  // Show loading spinner if supabase client is not ready
-  if (!supabase) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading Projects...</p>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div className="space-y-4 mt-16 md:mt-0 pt-6">
@@ -571,15 +540,15 @@ export default function Projects() {
               variant="default"
               className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
               onClick={confirmDelete}
-              disabled={deleting}
+              disabled={deleteProject.isPending}
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleteProject.isPending ? "Deleting..." : "Delete"}
             </Button>
             <Button
               variant="ghost"
               className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
               onClick={() => setShowDeleteDialog(false)}
-              disabled={deleting}
+              disabled={deleteProject.isPending}
             >
               Cancel
             </Button>

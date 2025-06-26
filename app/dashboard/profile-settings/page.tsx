@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { useClerkSupabaseClient } from "@/integrations/supabase/client"
 import { useUser, useAuth } from '@clerk/nextjs'
+import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/hooks/useQueries'
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,17 +16,23 @@ import { Upload, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { createClient } from "@supabase/supabase-js"
-import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ProfileSettingsSkeleton } from '@/components/ui/skeletons'
+import { useProfile, useProfileMutations } from "@/lib/hooks/useQueries"
 
 export default function ProfileSettings() {
   const supabase = useClerkSupabaseClient()
-  const { user } = useUser()
+  const { user, isLoaded } = useUser()
   const { getToken } = useAuth()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showRemoveDialog, setShowRemoveDialog] = useState(false)
   const [removingAvatar, setRemovingAvatar] = useState(false)
+
+  // Use React Query hooks
+  const { data: profile, isInitialLoading, hasData, error } = useProfile()
+  const { updateProfile } = useProfileMutations()
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -38,10 +46,146 @@ export default function ProfileSettings() {
     avatar_url: "",
   })
 
+  // Move functions to top to fix hoisting errors
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!user || !supabase) return
+
+    setLoading(true)
+    try {
+      const profileData = {
+        ...formData,
+        id: user.id,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Use the new mutation hook
+      await updateProfile.mutateAsync(profileData);
+    } catch (error: unknown) {
+      // Error handling is done in the mutation hook
+      console.error('Error submitting profile:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+
+    setUploadingAvatar(true)
+    try {
+      const token = await getToken({ template: "supabase" });
+      const supabaseUpload = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          },
+          auth: {
+            persistSession: false,
+          },
+        }
+      );
+
+      // Create a unique file name
+      const fileExt = file.name.split(".").pop()
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
+      const filePath = `avatars/${fileName}`
+
+      // Upload the file to Supabase Storage
+      const { error: uploadError } = await supabaseUpload.storage.from("portfolio").upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      // Get the public URL
+      const { data: publicUrlData } = supabaseUpload.storage.from("portfolio").getPublicUrl(filePath)
+
+      // Update the profile with the new avatar URL
+      const avatarUrl = publicUrlData.publicUrl
+
+      const { error: updateError } = await supabase
+        .from("user_profiles")
+        .update({ 
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+
+      if (updateError) throw updateError
+
+      // Update Clerk profile image as well
+      try {
+        await user.setProfileImage({ file });
+        await user.reload();
+      } catch (clerkError) {
+        // Clerk update failed but Supabase succeeded - not critical
+      }
+
+      // Update local state and refresh profile
+      setFormData((prev) => ({ ...prev, avatar_url: avatarUrl }))
+      toast.success("Profile picture updated!")
+
+      // Invalidate the dashboard data cache to reflect profile changes
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData(user.id) })
+    } catch (error: unknown) {
+
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error("Error uploading avatar: " + (error as { message?: string }).message)
+      } else {
+        toast.error("Error uploading avatar")
+      }
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  const handleRemoveAvatar = async () => {
+    if (!user) return
+    setRemovingAvatar(true)
+    try {
+      // Remove avatar_url from profile
+      const { error } = await supabase
+        .from("user_profiles")
+        .update({ 
+          avatar_url: "",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id)
+      if (error) throw error
+      setFormData((prev) => ({ ...prev, avatar_url: "" }))
+      toast.success("Profile photo removed!")
+      setShowRemoveDialog(false)
+
+      // Invalidate the dashboard data cache to reflect profile changes
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData(user.id) })
+    } catch (error: unknown) {
+
+      if (error && typeof error === 'object' && 'message' in error) {
+        toast.error("Error removing profile photo: " + (error as { message?: string }).message)
+      } else {
+        toast.error("Error removing profile photo")
+      }
+    } finally {
+      setRemovingAvatar(false)
+    }
+  }
+
   useEffect(() => {
     if (!user || !supabase) return;
 
     async function initializeProfile() {
+      if (!user?.id) return;
+      
       setPageLoading(true);
       try {
         // First, try to fetch existing profile
@@ -129,151 +273,28 @@ export default function ProfileSettings() {
     }
 
     initializeProfile();
-  }, [user, supabase]);
+  }, [user, supabase, profile, isLoaded]);
 
-  // Show loading spinner if supabase client is not ready or page is loading
-  if (pageLoading) {
-    return <LoadingSpinner text="Loading Profile Settings..." />;
+  // Show a skeleton while the initial data is loading and we don't have any cached data
+  if ((isInitialLoading && !hasData) || !isLoaded) {
+    return <ProfileSettingsSkeleton />
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!user || !supabase) return
-
-    setLoading(true)
-    try {
-      const profileData = {
-        ...formData,
-        id: user.id,
-        updated_at: new Date().toISOString(),
-      };
-
-      // Use upsert to either insert or update
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .upsert(profileData, {
-          onConflict: 'id'
-        })
-        .select();
-
-      if (error) {
-        throw error;
-      }
-      toast.success("Profile updated!")
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error("Error updating profile: " + (error as { message?: string }).message)
-      } else {
-        toast.error("Error updating profile")
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !user) return
-
-    setUploadingAvatar(true)
-    try {
-      const token = await getToken({ template: "supabase" });
-      const supabaseUpload = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          },
-          auth: {
-            persistSession: false,
-          },
-        }
-      );
-
-      // Create a unique file name
-      const fileExt = file.name.split(".").pop()
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
-      const filePath = `avatars/${fileName}`
-
-      // Upload the file to Supabase Storage
-      const { error: uploadError } = await supabaseUpload.storage.from("portfolio").upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      // Get the public URL
-      const { data: publicUrlData } = supabaseUpload.storage.from("portfolio").getPublicUrl(filePath)
-
-      // Update the profile with the new avatar URL
-      const avatarUrl = publicUrlData.publicUrl
-
-      const { error: updateError } = await supabase
-        .from("user_profiles")
-        .update({ 
-          avatar_url: avatarUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id)
-
-      if (updateError) throw updateError
-
-      // Update Clerk profile image as well
-      try {
-        await user.setProfileImage({ file });
-        await user.reload();
-      } catch (clerkError) {
-        // Clerk update failed but Supabase succeeded - not critical
-      }
-
-      // Update local state and refresh profile
-      setFormData((prev) => ({ ...prev, avatar_url: avatarUrl }))
-      toast.success("Profile picture updated!")
-    } catch (error: unknown) {
-
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error("Error uploading avatar: " + (error as { message?: string }).message)
-      } else {
-        toast.error("Error uploading avatar")
-      }
-    } finally {
-      setUploadingAvatar(false)
-    }
-  }
-
-  const handleRemoveAvatar = async () => {
-    if (!user) return
-    setRemovingAvatar(true)
-    try {
-      // Remove avatar_url from profile
-      const { error } = await supabase
-        .from("user_profiles")
-        .update({ 
-          avatar_url: "",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", user.id)
-      if (error) throw error
-      setFormData((prev) => ({ ...prev, avatar_url: "" }))
-      toast.success("Profile photo removed!")
-      setShowRemoveDialog(false)
-    } catch (error: unknown) {
-
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error("Error removing profile photo: " + (error as { message?: string }).message)
-      } else {
-        toast.error("Error removing profile photo")
-      }
-    } finally {
-      setRemovingAvatar(false)
-    }
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Failed to load profile</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-2"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (

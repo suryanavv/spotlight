@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { useUser } from '@clerk/nextjs';
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
+import { useEducation, useEducationMutations } from '@/lib/hooks/useQueries';
 import type { Education } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -16,20 +16,21 @@ import { format, parseISO } from "date-fns"
 import { Pencil, Trash2, Plus, GraduationCap, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { MonthYearPicker } from "@/components/month-year-picker"
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { EducationSkeleton } from '@/components/ui/skeletons';
 
 export default function EducationPage() {
-  const supabase = useClerkSupabaseClient();
   const { user } = useUser();
-  const [educationList, setEducationList] = useState<Education[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use React Query hooks for data fetching and mutations
+  const { data: education = [], isInitialLoading, hasData, error } = useEducation();
+  const { createEducation, updateEducation, deleteEducation } = useEducationMutations();
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEducation, setEditingEducation] = useState<Education | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
 
   const currentDate = format(new Date(), 'yyyy-MM-dd')
 
@@ -43,27 +44,7 @@ export default function EducationPage() {
     description: "",
   });
 
-  const fetchEducation = useCallback(async () => {
-    if (!user || !supabase) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("education")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("end_date", { ascending: false });
-      if (error) throw error;
-      setEducationList(data as Education[]);
-          } catch (error: unknown) {
-        // Silent error handling - user will see empty state
-      } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
-
   useEffect(() => {
-    fetchEducation();
-    
     // Check if mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -72,10 +53,27 @@ export default function EducationPage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, [user, supabase, fetchEducation]);
+  }, []);
 
-  if (loading) {
-    return <LoadingSpinner text="Loading Education..." />;
+  if (isInitialLoading && !hasData) {
+    return <EducationSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Failed to load education data</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-2"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const handleOpenDialog = (education: Education | null = null) => {
@@ -165,30 +163,15 @@ export default function EducationPage() {
       }
 
       if (editingEducation) {
-        const { error } = await supabase
-          .from("education")
-          .update(educationData)
-          .eq("id", editingEducation.id)
-
-        if (error) throw error
-        toast.success("Education updated!")
+        await updateEducation.mutateAsync({ id: editingEducation.id, ...educationData })
       } else {
-        const { error } = await supabase
-          .from("education")
-          .insert([educationData])
-
-        if (error) throw error
-        toast.success("Education added!")
+        await createEducation.mutateAsync(educationData)
       }
 
       handleCloseForm()
-      fetchEducation()
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error saving education details");
-      } else {
-        toast.error("Error saving education details");
-      }
+      // Error handling is done in the mutation hooks
+      console.error('Error submitting education:', error)
     }
   }
 
@@ -199,22 +182,13 @@ export default function EducationPage() {
 
   const confirmDelete = async () => {
     if (!deletingId) return
-    setDeleting(true)
     try {
-      const { error } = await supabase.from("education").delete().eq("id", deletingId)
-      if (error) throw error
-      toast.success("Education deleted!")
-      fetchEducation()
+      await deleteEducation.mutateAsync(deletingId)
       setShowDeleteDialog(false)
       setDeletingId(null)
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error deleting education entry");
-      } else {
-        toast.error("Error deleting education entry");
-      }
-    } finally {
-      setDeleting(false)
+      // Error handling is done in the mutation hook
+      console.error('Error deleting education:', error)
     }
   }
 
@@ -350,8 +324,12 @@ export default function EducationPage() {
         >
           Cancel
         </Button>
-        <Button type="submit" className="h-8 rounded-full px-3 text-xs touch-manipulation">
-          {editingEducation ? "Update" : "Add"} Education
+        <Button 
+          type="submit" 
+          disabled={createEducation.isPending || updateEducation.isPending}
+          className="h-8 rounded-full px-3 text-xs touch-manipulation"
+        >
+          {createEducation.isPending || updateEducation.isPending ? "Saving..." : editingEducation ? "Update" : "Add"} Education
         </Button>
       </div>
     </form>
@@ -380,7 +358,7 @@ export default function EducationPage() {
       )}
 
       <div className="space-y-3">
-        {educationList.length === 0 ? (
+        {education.length === 0 ? (
           <motion.div
             className="rounded-lg border border-gray-200 bg-gray-50 py-10 text-center"
             initial={{ opacity: 0, y: 10 }}
@@ -400,7 +378,7 @@ export default function EducationPage() {
             </Button>
           </motion.div>
         ) : (
-          educationList.map((education, index) => {
+          education.map((education, index) => {
             const isBeingEdited = isMobile && editingEducation?.id === education.id && showInlineForm;
             
             if (isBeingEdited) {
@@ -501,22 +479,22 @@ export default function EducationPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
-            <Button
-              variant="default"
-              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
-              onClick={confirmDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-            <Button
-              variant="ghost"
-              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={deleting}
-            >
-              Cancel
-            </Button>
+                          <Button
+                variant="default"
+                className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
+                onClick={confirmDelete}
+                disabled={deleteEducation.isPending}
+              >
+                {deleteEducation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={deleteEducation.isPending}
+              >
+                Cancel
+              </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,73 +1,44 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useUser } from '@clerk/nextjs';
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
-import { Project, Education, Experience } from "@/types/database";
+import { useDashboardData } from '@/lib/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { Share2, Briefcase, GraduationCap, FileText, CheckCircle, XCircle } from 'lucide-react';
 import { motion } from "framer-motion";
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { OverviewSkeleton } from '@/components/ui/skeletons';
+import { RefreshButton } from '@/components/ui/refresh-button';
 
 export default function Overview() {
   const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [education, setEducation] = useState<Education[]>([]);
-  const [experience, setExperience] = useState<Experience[]>([]);
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  
+  // Use the combined dashboard data hook for better performance
+  const { data, isInitialLoading, error } = useDashboardData();
 
-  useEffect(() => {
-    async function fetchData() {
-      if (!user || !supabase) return;
-
-      try {
-        setLoading(true);
-
-        // Fetch projects
-        const { data: projectsData, error: projectsError } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("created_at", { ascending: false });
-
-        if (projectsError) throw projectsError;
-        setProjects(projectsData as Project[]);
-
-        // Fetch education
-        const { data: educationData, error: educationError } = await supabase
-          .from("education")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("end_date", { ascending: false });
-
-        if (educationError) throw educationError;
-        setEducation(educationData as Education[]);
-
-        // Fetch experience
-        const { data: experienceData, error: experienceError } = await supabase
-          .from("experience")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("end_date", { ascending: false });
-
-        if (experienceError) throw experienceError;
-        setExperience(experienceData as Experience[]);
-      } catch (error) {
-        // Error fetching data - will show loading state
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, [user, supabase]);
-
-  if (!supabase || loading) {
-    return <LoadingSpinner text="Loading your dashboard..." />;
+  // Show skeleton only on initial load when no cached data exists
+  if (isInitialLoading) {
+    return <OverviewSkeleton />;
   }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Failed to load dashboard data</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-2"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { projects = [], education = [], experience = [] } = data || {};
 
   // Calculate profile completion percentage
   const checklistItems = [
@@ -88,6 +59,7 @@ export default function Overview() {
     <div className="space-y-4 mt-16 md:mt-0 pt-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-medium">Dashboard Overview</h1>
+        <RefreshButton size="sm" variant="ghost" />
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button
@@ -220,7 +192,7 @@ export default function Overview() {
                           item.name === "Profile Image" ||
                           item.name === "Bio"
                         ) {
-                          router.push("/dashboard/profile");
+                          router.push("/dashboard/profile-settings");
                         } else if (item.name === "Projects") {
                           router.push("/dashboard/projects");
                         } else if (item.name === "Education") {

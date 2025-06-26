@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { useUser } from '@clerk/nextjs';
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
+import { useExperience, useExperienceMutations } from '@/lib/hooks/useQueries';
 import type { Experience } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -16,20 +16,21 @@ import { format, parseISO } from "date-fns"
 import { Pencil, Trash2, Plus, Briefcase, MapPin, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { MonthYearPicker } from "@/components/month-year-picker"
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { ExperienceSkeleton } from '@/components/ui/skeletons';
 
 export default function ExperiencePage() {
-  const supabase = useClerkSupabaseClient();
   const { user } = useUser();
-  const [experienceList, setExperienceList] = useState<Experience[]>([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Use React Query hooks for data fetching and mutations
+  const { data: experienceList = [], isInitialLoading, hasData, error } = useExperience();
+  const { createExperience, updateExperience, deleteExperience } = useExperienceMutations();
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [showInlineForm, setShowInlineForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState(false)
 
   const currentDate = format(new Date(), 'yyyy-MM-dd')
 
@@ -43,27 +44,7 @@ export default function ExperiencePage() {
     description: "",
   });
 
-  const fetchExperience = useCallback(async () => {
-    if (!user || !supabase) return;
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("experience")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("end_date", { ascending: false });
-      if (error) throw error;
-      setExperienceList(data as Experience[]);
-          } catch (error: unknown) {
-        // Silent error handling - user will see empty state
-      } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
-
   useEffect(() => {
-    fetchExperience();
-    
     // Check if mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -72,10 +53,27 @@ export default function ExperiencePage() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, [user, supabase, fetchExperience]);
+  }, []);
 
-  if (loading) {
-    return <LoadingSpinner text="Loading Experience..." />;
+  if (isInitialLoading && !hasData) {
+    return <ExperienceSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">Failed to load experience data</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()} 
+            className="mt-2"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   const handleOpenDialog = (experience: Experience | null = null) => {
@@ -153,7 +151,7 @@ export default function ExperiencePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !supabase) return
+    if (!user) return
 
     try {
       const experienceData = {
@@ -165,25 +163,15 @@ export default function ExperiencePage() {
       }
 
       if (editingExperience) {
-        const { error } = await supabase.from("experience").update(experienceData).eq("id", editingExperience.id)
-
-        if (error) throw error
-        toast.success("Experience updated!")
+        await updateExperience.mutateAsync({ id: editingExperience.id, ...experienceData })
       } else {
-        const { error } = await supabase.from("experience").insert([experienceData])
-
-        if (error) throw error
-        toast.success("Experience added!")
+        await createExperience.mutateAsync(experienceData)
       }
 
       handleCloseForm()
-      fetchExperience()
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error saving experience details");
-      } else {
-        toast.error("Error saving experience details");
-      }
+      // Error handling is done in the mutation hooks
+      console.error('Error submitting experience:', error)
     }
   }
 
@@ -194,23 +182,13 @@ export default function ExperiencePage() {
 
   const confirmDelete = async () => {
     if (!deletingId) return
-    setDeleting(true)
     try {
-      if (!supabase) return;
-      const { error } = await supabase.from("experience").delete().eq("id", deletingId)
-      if (error) throw error
-      toast.success("Experience deleted!")
-      fetchExperience()
+      await deleteExperience.mutateAsync(deletingId)
       setShowDeleteDialog(false)
       setDeletingId(null)
     } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'message' in error) {
-        toast.error((error as { message?: string }).message || "Error deleting experience entry");
-      } else {
-        toast.error("Error deleting experience entry");
-      }
-    } finally {
-      setDeleting(false)
+      // Error handling is done in the mutation hook
+      console.error('Error deleting experience:', error)
     }
   }
 
@@ -346,24 +324,16 @@ export default function ExperiencePage() {
         >
           Cancel
         </Button>
-        <Button type="submit" className="h-8 rounded-full px-3 text-xs touch-manipulation">
-          {editingExperience ? "Update" : "Add"} Experience
+        <Button 
+          type="submit" 
+          disabled={createExperience.isPending || updateExperience.isPending}
+          className="h-8 rounded-full px-3 text-xs touch-manipulation"
+        >
+          {createExperience.isPending || updateExperience.isPending ? "Saving..." : editingExperience ? "Update" : "Add"} Experience
         </Button>
       </div>
     </form>
   );
-
-  // Show loading spinner if supabase client is not ready
-  if (!supabase) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading Experience...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-4 mt-16 md:mt-0 pt-6">
@@ -510,22 +480,22 @@ export default function ExperiencePage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
-            <Button
-              variant="default"
-              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
-              onClick={confirmDelete}
-              disabled={deleting}
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-            <Button
-              variant="ghost"
-              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
-              onClick={() => setShowDeleteDialog(false)}
-              disabled={deleting}
-            >
-              Cancel
-            </Button>
+                          <Button
+                variant="default"
+                className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
+                onClick={confirmDelete}
+                disabled={deleteExperience.isPending}
+              >
+                {deleteExperience.isPending ? "Deleting..." : "Delete"}
+              </Button>
+              <Button
+                variant="ghost"
+                className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
+                onClick={() => setShowDeleteDialog(false)}
+                disabled={deleteExperience.isPending}
+              >
+                Cancel
+              </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

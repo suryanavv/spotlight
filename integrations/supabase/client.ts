@@ -58,7 +58,7 @@ export function useInitializeUserProfile() {
     let isInitializing = false; // Prevent multiple simultaneous initializations
 
     async function initializeUserProfile() {
-      if (isInitializing) return;
+      if (isInitializing || !user?.id) return;
       isInitializing = true;
       try {
         // Add a small delay to prevent immediate race conditions
