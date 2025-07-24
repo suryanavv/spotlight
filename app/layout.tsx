@@ -1,28 +1,28 @@
-import { ClerkProvider } from '@clerk/nextjs';
 import './globals.css';
 import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { QueryProvider } from '@/components/providers/QueryProvider';
+import { AuthProvider } from '@/components/providers/AuthProvider';
 
 export const metadata = {
   title: 'Spotlight',
-  description: 'A migrated Next.js app',
+  description: 'A portfolio builder powered by Supabase',
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <head>
-          <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        </head>
-        <body>
+    <html lang="en">
+      <head>
+        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+      </head>
+      <body>
+        <AuthProvider>
           <QueryProvider>
             <Toaster />
             {children}
           </QueryProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   );
 } 

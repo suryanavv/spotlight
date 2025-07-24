@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
-import { useUser, useClerk, UserProfile, UserButton, SignedIn } from '@clerk/nextjs'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { motion } from "framer-motion"
-import { ArrowRight, Check, Share2, LayoutDashboard} from 'lucide-react'
+import { ArrowRight, Check, Share2, LayoutDashboard, User, LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ParticleButton } from "@/components/ui/particle-button";
+import { AuthModal } from "@/components/ui/auth-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,24 +20,26 @@ import {
 import { toast } from "sonner"
 import { useState, useEffect } from "react"
 
-const Index = () => {
-  const { user } = useUser()
-  const router = useRouter()
-  const { openSignIn, openSignUp } = useClerk()
-  const [showProfile, setShowProfile] = useState(false)
 
-  // Disable background scroll and dim background when popout is open
-  useEffect(() => {
-    const popoutOpen = showProfile;
-    if (popoutOpen) {
-      document.body.style.overflow = 'hidden';
+const Index = () => {
+  const { user, signOut } = useAuth()
+  const router = useRouter()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
+
+  const openAuthModal = (mode: 'signin' | 'signup') => {
+    setAuthModalMode(mode)
+    setAuthModalOpen(true)
+  }
+
+  const handleSignOut = async () => {
+    const { error } = await signOut()
+    if (error) {
+      toast.error('Error signing out')
     } else {
-      document.body.style.overflow = '';
+      router.push('/')
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [showProfile]);
+  }
 
   const fadeIn = {
     hidden: { opacity: 0, y: 20 },
@@ -58,38 +61,15 @@ const Index = () => {
     },
   ]
 
-  const renderProfilePopout = () => (
-    <>
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 50,
-          background: 'rgba(0,0,0,0.35)',
-        }}
-        onClick={() => setShowProfile(false)}
-        aria-label="Close profile popout"
-      />
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 51,
-          minHeight: 100,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-        role="dialog"
-        aria-modal="true"
-        onClick={e => e.stopPropagation()}
-      >
-        <UserProfile />
-      </div>
-    </>
-  );
+  const getUserDisplayName = () => {
+    if (!user) return ''
+    return user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'
+  }
+
+  const getUserAvatar = () => {
+    if (!user) return ''
+    return user.user_metadata?.avatar_url || user.user_metadata?.picture || ''
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-white">      {/* Announcement Banner */}
@@ -101,10 +81,7 @@ const Index = () => {
             variant="link"
             size="sm"
             className="ml-2 h-auto p-0 text-xs font-normal text-primary-foreground underline"
-            onClick={() => user ? router.push('/dashboard') : openSignUp({ 
-              afterSignUpUrl: '/dashboard',
-              redirectUrl: '/sso-callback'
-            })}
+            onClick={() => user ? router.push('/dashboard') : openAuthModal('signup')}
           >
             Check it out →
           </Button>
@@ -150,31 +127,58 @@ const Index = () => {
                   <span>Dashboard</span>
                 </Button>
 
-                <SignedIn>
-                  <UserButton afterSignOutUrl="/" />
-                </SignedIn>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={getUserAvatar()} alt={getUserDisplayName()} />
+                        <AvatarFallback>
+                          {getUserDisplayName().charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{getUserDisplayName()}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/dashboard/profile-settings')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Dashboard</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => openSignIn({ 
-                    afterSignInUrl: '/dashboard',
-                    redirectUrl: '/sso-callback'
-                  })}
-                  className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
+                  onClick={() => openAuthModal('signin')}
+                  className="h-8 rounded-full px-3 text-xs font-normal"
                 >
                   Sign in
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => openSignUp({ 
-                    afterSignUpUrl: '/dashboard',
-                    redirectUrl: '/sso-callback'
-                  })}
-                  className="hidden h-8 rounded-full px-3 text-xs font-normal md:inline-flex"
+                  onClick={() => openAuthModal('signup')}
+                  className="h-8 rounded-full px-3 text-xs font-normal"
                 >
                   Sign up
                 </Button>
@@ -220,16 +224,12 @@ const Index = () => {
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <ParticleButton
-                  onClick={() => user ? router.push('/dashboard') : openSignUp({ 
-                    afterSignUpUrl: '/dashboard',
-                    redirectUrl: '/sso-callback'
-                  })}
+                  onClick={() => user ? router.push('/dashboard') : openAuthModal('signup')}
                   size="lg"
                   variant="default"
                   className="rounded-full"
                 >
                   {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
-                  {/* <ArrowRight className="ml-2 h-4 w-4" /> */}
                   <span className="ml-2">✦</span>
                 </ParticleButton>
               </div>
@@ -304,22 +304,27 @@ const Index = () => {
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
               <ParticleButton
-                onClick={() => user ? router.push('/dashboard') : openSignUp({ 
-                  afterSignUpUrl: '/dashboard',
-                  redirectUrl: '/sso-callback'
-                })}
+                onClick={() => user ? router.push('/dashboard') : openAuthModal('signup')}
                 variant="default"
                 size="lg"
                 className="rounded-full"
               >
                 {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
-                {/* <ArrowRight className="ml-2 h-4 w-4" /> */}
                 <span className="ml-2">✦</span>
               </ParticleButton>
             </motion.div>
           </div>
         </section>
-      </main>      {/* Footer */}
+      </main>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode={authModalMode}
+      />
+
+      {/* Footer */}
       <footer className="border-t border-border bg-background py-4">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center justify-between gap-8 md:flex-row">
@@ -332,8 +337,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-      {/* Clerk Auth Popout */}
-      {showProfile && renderProfilePopout()}
     </div>
   )
 }

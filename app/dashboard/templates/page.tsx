@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { useUser } from '@clerk/nextjs';
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -45,24 +45,40 @@ const TEMPLATES: Template[] = [
 ];
 
 export default function Templates() {
-  const supabase = useClerkSupabaseClient();
-  const { user } = useUser();
+  const { user } = useAuth();
   const [selectedTemplate, setSelectedTemplate] = useState<string>("minimal");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user?.unsafeMetadata?.selected_template) {
-      setSelectedTemplate(user.unsafeMetadata.selected_template as string);
+    // Fetch current template from profile
+    const fetchTemplate = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('selected_template')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.selected_template) {
+          setSelectedTemplate(profile.selected_template);
+        }
+      } catch (error) {
+        console.error('Error fetching template:', error);
     }
+    };
+
+    fetchTemplate();
   }, [user]);
 
-  // Show loading spinner if supabase client is not ready
-  if (!supabase || !user) {
+  // Show loading spinner if user is not ready
+  if (!user) {
     return <LoadingSpinner text="Loading Templates..." />;
   }
 
   const handleTemplateSelect = async (templateId: string) => {
-    if (!user || !supabase) return;
+    if (!user) return;
     if (templateId === selectedTemplate) return;
 
     setLoading(true);
@@ -75,7 +91,6 @@ export default function Templates() {
       if (error) throw error;
 
       setSelectedTemplate(templateId);
-      await user.update({ unsafeMetadata: { ...user.unsafeMetadata, selected_template: templateId } });
       toast.success(`Using ${TEMPLATES.find((t) => t.id === templateId)?.name} template!`);
     } catch (error: unknown) {
       if (error && typeof error === 'object' && 'message' in error) {

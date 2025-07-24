@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useClerkSupabaseClient } from "@/integrations/supabase/client"
-import { useUser, useAuth } from '@clerk/nextjs'
+import { supabase } from "@/integrations/supabase/client"
+import { useAuth } from '@/components/providers/AuthProvider'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/hooks/useQueries'
 import { toast } from "sonner"
@@ -20,9 +20,7 @@ import { ProfileSettingsSkeleton } from '@/components/ui/skeletons'
 import { useProfile, useProfileMutations } from "@/lib/hooks/useQueries"
 
 export default function ProfileSettings() {
-  const supabase = useClerkSupabaseClient()
-  const { user, isLoaded } = useUser()
-  const { getToken } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [pageLoading, setPageLoading] = useState(true)
@@ -80,35 +78,18 @@ export default function ProfileSettings() {
 
     setUploadingAvatar(true)
     try {
-      const token = await getToken({ template: "supabase" });
-      const supabaseUpload = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          },
-          auth: {
-            persistSession: false,
-          },
-        }
-      );
-
       // Create a unique file name
       const fileExt = file.name.split(".").pop()
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = `avatars/${fileName}`
 
       // Upload the file to Supabase Storage
-      const { error: uploadError } = await supabaseUpload.storage.from("portfolio").upload(filePath, file)
+      const { error: uploadError } = await supabase.storage.from("portfolio").upload(filePath, file)
 
       if (uploadError) throw uploadError
 
       // Get the public URL
-      const { data: publicUrlData } = supabaseUpload.storage.from("portfolio").getPublicUrl(filePath)
+      const { data: publicUrlData } = supabase.storage.from("portfolio").getPublicUrl(filePath)
 
       // Update the profile with the new avatar URL
       const avatarUrl = publicUrlData.publicUrl
@@ -122,14 +103,6 @@ export default function ProfileSettings() {
         .eq("id", user.id)
 
       if (updateError) throw updateError
-
-      // Update Clerk profile image as well
-      try {
-        await user.setProfileImage({ file });
-        await user.reload();
-      } catch (clerkError) {
-        // Clerk update failed but Supabase succeeded - not critical
-      }
 
       // Update local state and refresh profile
       setFormData((prev) => ({ ...prev, avatar_url: avatarUrl }))
@@ -181,7 +154,7 @@ export default function ProfileSettings() {
   }
 
   useEffect(() => {
-    if (!user || !supabase) return;
+    if (!user) return;
 
     async function initializeProfile() {
       if (!user?.id) return;
@@ -212,13 +185,13 @@ export default function ProfileSettings() {
             github: existingProfile.github || '',
             linkedin: existingProfile.linkedin || '',
             twitter: existingProfile.twitter || '',
-            avatar_url: existingProfile.avatar_url || user.imageUrl || '',
+            avatar_url: existingProfile.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
           });
         } else {
-          // Profile doesn't exist, create it with Google account data as defaults
+          // Profile doesn't exist, create it with auth user data as defaults
           const defaultProfile = {
             id: user.id,
-            full_name: user.fullName || user.firstName + (user.lastName ? ` ${user.lastName}` : '') || '',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
             headline: '',
             bio: '',
             location: '',
@@ -226,7 +199,7 @@ export default function ProfileSettings() {
             github: '',
             linkedin: '',
             twitter: '',
-            avatar_url: user.imageUrl || '',
+            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           };
@@ -273,10 +246,10 @@ export default function ProfileSettings() {
     }
 
     initializeProfile();
-  }, [user, supabase, profile, isLoaded]);
+  }, [user, profile, authLoading]);
 
   // Show a skeleton while the initial data is loading and we don't have any cached data
-  if ((isInitialLoading && !hasData) || !isLoaded) {
+  if ((isInitialLoading && !hasData) || authLoading) {
     return <ProfileSettingsSkeleton />
   }
 
@@ -318,7 +291,7 @@ export default function ProfileSettings() {
                 <Avatar className="w-24 h-24 border-2 border-gray-200">
                   <AvatarImage src={formData.avatar_url || "/placeholder.svg"} />
                   <AvatarFallback className="text-2xl bg-gray-100 text-gray-500">
-                    {formData.full_name?.[0]?.toUpperCase() || user?.primaryEmailAddress?.emailAddress?.[0]?.toUpperCase()}
+                    {formData.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
 

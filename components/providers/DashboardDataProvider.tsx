@@ -2,19 +2,18 @@
 
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useUser } from '@clerk/nextjs';
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/hooks/useQueries';
 import type { Project, Education, Experience, Profile } from '@/types/database';
 
 export function DashboardDataProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
-  const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
+  const { user } = useAuth();
 
   useEffect(() => {
     // Prefetch dashboard data when user enters dashboard area
-    if (user && supabase) {
+    if (user) {
       const prefetchData = async () => {
         // Check if data is already in cache and not stale
         const existingData = queryClient.getQueryData(queryKeys.dashboardData(user.id));
@@ -78,7 +77,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
 
       prefetchData();
     }
-  }, [user, supabase, queryClient]);
+  }, [user, queryClient]);
 
   return <>{children}</>;
 } 

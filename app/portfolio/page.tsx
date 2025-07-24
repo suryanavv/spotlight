@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
+import { supabase } from '@/integrations/supabase/client';
 import { Profile, Project, Education, Experience } from "@/types/database";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,7 +19,6 @@ import {
 
 export default function Portfolio() {
   const { userId } = useParams<{ userId: string }>();
-  const supabase = useClerkSupabaseClient();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
@@ -29,7 +28,7 @@ export default function Portfolio() {
 
   useEffect(() => {
     async function fetchPortfolioData() {
-      if (!userId || !supabase) return;
+      if (!userId) return;
       try {
         setLoading(true);
         setError(null);
@@ -76,19 +75,7 @@ export default function Portfolio() {
       }
     }
     fetchPortfolioData();
-  }, [userId, supabase]);
-
-  // Show loading spinner if supabase client is not ready
-  if (!supabase) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-white">
-      <div className="flex flex-col items-center">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-        <p className="mt-3 text-xs text-gray-500">Loading Portfolio...</p>
-      </div>
-    </div>
-    );
-  }
+  }, [userId]);
 
   if (loading) {
     return (

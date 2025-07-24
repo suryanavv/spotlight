@@ -10,13 +10,13 @@ Your professional portfolio, reimagined. Create a stunning portfolio to highligh
 - **Project Showcase**: Highlight your best work with detailed project descriptions, images, and links.
 - **Easy Sharing**: Share your portfolio with a single link and make a lasting impression.
 - **Detailed Profile**: Add your education, work experience, and social links to create a comprehensive professional profile.
-- **Authentication**: Secure authentication powered by Clerk.
+- **Authentication**: Secure authentication powered by Supabase Auth.
 
 ## 🚀 Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/)
 - **Backend & Database**: [Supabase](https://supabase.io/)
-- **Authentication**: [Clerk](https://clerk.dev/)
+- **Authentication**: [Supabase Auth](https://supabase.com/auth)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [Shadcn/UI](https://ui.shadcn.com/) & [Radix UI](https://www.radix-ui.com/)
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
@@ -32,7 +32,7 @@ Follow these instructions to get a copy of the project up and running on your lo
 - [Node.js](https://nodejs.org/en/) (v18 or newer)
 - [Bun](https://bun.sh/) or npm/yarn for package management
 - A [Supabase](https://supabase.com/) account for the database.
-- A [Clerk](https://clerk.com/) account for authentication.
+- A [Supabase](https://supabase.com/) account for backend and authentication.
 
 ### Installation
 
@@ -51,20 +51,12 @@ Follow these instructions to get a copy of the project up and running on your lo
 
 3.  **Set up environment variables:**
 
-    Create a `.env.local` file in the root of your project and add the following environment variables. You can get these from your Supabase and Clerk project settings.
+    Create a `.env.local` file in the root of your project and add the following environment variables. You can get these from your Supabase project settings.
 
     ```env
     # Supabase
     NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
     NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-
-    # Clerk
-    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
-    CLERK_SECRET_KEY=your-clerk-secret-key
-    NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-    NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
-    NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
     ```
 
 4.  **Set up Supabase database:**

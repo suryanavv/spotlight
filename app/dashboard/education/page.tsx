@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { useEducation, useEducationMutations } from '@/lib/hooks/useQueries';
 import type { Education } from "@/types/database"
 import { toast } from "sonner"
@@ -19,7 +19,7 @@ import { MonthYearPicker } from "@/components/month-year-picker"
 import { EducationSkeleton } from '@/components/ui/skeletons';
 
 export default function EducationPage() {
-  const { user } = useUser();
+  const { user } = useAuth();
   
   // Use React Query hooks for data fetching and mutations
   const { data: education = [], isInitialLoading, hasData, error } = useEducation();

@@ -3,14 +3,13 @@
 import type React from "react"
 
 import { useRouter, usePathname } from "next/navigation"
-import { useUser, useClerk } from '@clerk/nextjs'
+import { useAuth } from '@/components/providers/AuthProvider'
 import { useEffect, useState } from "react"
 import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X, Share2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
-import { useInitializeUserProfile } from "@/integrations/supabase/client"
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider"
 
 interface DashboardLayoutProps {
@@ -18,15 +17,11 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { user, isLoaded } = useUser()
-  const { signOut } = useClerk()
+  const { user, loading, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  // Initialize user profile automatically when they first access dashboard
-  useInitializeUserProfile()
 
   // Collapse sidebar on mobile by default
   useEffect(() => {
@@ -47,22 +42,26 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [])
 
   useEffect(() => {
-    if (isLoaded && !user) {
-      router.push('/') // Clerk's default sign-in route
+    if (!loading && !user) {
+      router.push('/sign-in')
     }
-  }, [user, isLoaded, router])
+  }, [user, loading, router])
 
   const handleLogout = async () => {
     try {
-      await signOut()
-      toast.success("Signed out successfully")
-      router.push("/")
+      const { error } = await signOut()
+      if (error) {
+        toast.error("Error signing out")
+      } else {
+        toast.success("Signed out successfully")
+        router.push("/")
+      }
     } catch (error) {
       toast.error("Error signing out")
     }
   }
 
-  if (!isLoaded) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-white">
         <div className="flex flex-col items-center">
@@ -71,6 +70,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
     )
+  }
+
+  if (!user) {
+    return null // Will redirect to sign-in
   }
 
   const navItems = [
@@ -179,15 +182,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 transition={{ type: 'spring', stiffness: 200, damping: 36 }}
                 className="fixed bottom-8 left-0 right-0 mx-auto z-50 w-[92vw] max-w-lg rounded-xl border border-gray-200 bg-white p-4 shadow-2xl md:hidden flex flex-col items-center pointer-events-auto"
               >
-                {/* <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-3 top-3 h-7 w-7 rounded-full"
-                  onClick={() => setMobileMenuOpen(false)}
-                  aria-label="Close menu"
-                >
-                  <ChevronDown size={18} />
-                </Button> */}
                 <nav className="w-full flex-1 flex flex-col justify-center items-center gap-2 mt-1 mb-1">
                   {navItems.map((item, index) => {
                     const active = isActive(item.path)

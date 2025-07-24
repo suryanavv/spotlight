@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useProjects, useProjectMutations } from "@/lib/hooks/useQueries"
-import { useUser, useAuth } from '@clerk/nextjs'
+import { useAuth } from '@/components/providers/AuthProvider'
 import type { Project } from "@/types/database"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -14,12 +14,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { Pencil, Trash2, Plus, ExternalLink, Github, ImageIcon, X } from "lucide-react"
 import { motion } from "framer-motion"
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "@/integrations/supabase/client"
 import { ProjectsSkeleton } from '@/components/ui/skeletons'
 
 export default function Projects() {
-  const { user } = useUser()
-  const { getToken } = useAuth()
+  const { user } = useAuth()
   
   // Use React Query hooks for data fetching and mutations
   const { data: projects = [], isInitialLoading, hasData, error } = useProjects()
@@ -128,31 +127,15 @@ export default function Projects() {
 
     setUploadingImage(true)
     try {
-      const token = await getToken({ template: "supabase" });
-      const supabaseUpload = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          global: {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-          },
-          auth: {
-            persistSession: false,
-          },
-        }
-      );
       const fileExt = file.name.split(".").pop()
       const fileName = `${user.id}-${Math.random().toString(36).substring(2)}.${fileExt}`
       const filePath = `projects/${fileName}`
 
-      const { error: uploadError } = await supabaseUpload.storage.from("portfolio").upload(filePath, file)
+      const { error: uploadError } = await supabase.storage.from("portfolio").upload(filePath, file)
 
       if (uploadError) throw uploadError
 
-      const { data: publicUrlData } = supabaseUpload.storage.from("portfolio").getPublicUrl(filePath)
+      const { data: publicUrlData } = supabase.storage.from("portfolio").getPublicUrl(filePath)
 
       const imageUrl = publicUrlData.publicUrl
       setFormData((prev) => ({ ...prev, image_url: imageUrl }))

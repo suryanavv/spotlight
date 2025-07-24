@@ -1,5 +1,5 @@
 "use client";
-import { useUser } from '@clerk/nextjs';
+import { useAuth } from '@/components/providers/AuthProvider';
 import { useDashboardData } from '@/lib/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { OverviewSkeleton } from '@/components/ui/skeletons';
 import { RefreshButton } from '@/components/ui/refresh-button';
 
 export default function Overview() {
-  const { user } = useUser();
+  const { user } = useAuth();
   const router = useRouter();
   
   // Use the combined dashboard data hook for better performance
@@ -42,9 +42,9 @@ export default function Overview() {
 
   // Calculate profile completion percentage
   const checklistItems = [
-    { name: "Full Name", completed: !!user?.fullName },
-    { name: "Profile Image", completed: !!user?.imageUrl },
-    { name: "Bio", completed: !!(user?.unsafeMetadata.bio as string) },
+    { name: "Full Name", completed: !!(user?.user_metadata?.full_name || user?.user_metadata?.name) },
+    { name: "Profile Image", completed: !!(user?.user_metadata?.avatar_url || user?.user_metadata?.picture) },
+    { name: "Bio", completed: !!(data?.profile?.bio) },
     { name: "Projects", completed: projects.length > 0 },
     { name: "Education", completed: education.length > 0 },
     { name: "Experience", completed: experience.length > 0 },

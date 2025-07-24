@@ -1,8 +1,8 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useUser } from '@clerk/nextjs';
-import { useClerkSupabaseClient } from '@/integrations/supabase/client';
+import { useAuth } from '@/components/providers/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 import type { Project, Education, Experience, Profile } from '@/types/database';
 import { toast } from 'sonner';
 
@@ -14,14 +14,13 @@ export const queryKeys = {
 
 // Combined Dashboard Data Hook - Fetches ALL data at once
 export function useDashboardData() {
-  const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: queryKeys.dashboardData(user?.id || ''),
     queryFn: async () => {
-      if (!user || !supabase) throw new Error('Not authenticated');
+      if (!user) throw new Error('Not authenticated');
       
       // Execute all queries in parallel for better performance
       const [projectsResult, educationResult, experienceResult, profileResult] = await Promise.allSettled([
@@ -71,7 +70,7 @@ export function useDashboardData() {
         profile,
       };
     },
-    enabled: !!user && !!supabase,
+    enabled: !!user,
     staleTime: 30 * 60 * 1000, // 30 minutes - longer for dashboard data since it doesn't change frequently
   });
 
@@ -149,12 +148,10 @@ export function useProfile() {
 // Project Mutations
 export function useProjectMutations() {
   const queryClient = useQueryClient();
-  const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
+  const { user } = useAuth();
 
   const createProject = useMutation({
     mutationFn: async (projectData: Omit<Project, 'id' | 'created_at'>) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { data, error } = await supabase.from('projects').insert([projectData]).select();
       if (error) throw error;
       return data;
@@ -171,7 +168,6 @@ export function useProjectMutations() {
 
   const updateProject = useMutation({
     mutationFn: async ({ id, ...projectData }: Partial<Project> & { id: string }) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { data, error } = await supabase.from('projects').update(projectData).eq('id', id).select();
       if (error) throw error;
       return data;
@@ -187,7 +183,6 @@ export function useProjectMutations() {
 
   const deleteProject = useMutation({
     mutationFn: async (id: string) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { error } = await supabase.from('projects').delete().eq('id', id);
       if (error) throw error;
     },
@@ -206,12 +201,10 @@ export function useProjectMutations() {
 // Education Mutations
 export function useEducationMutations() {
   const queryClient = useQueryClient();
-  const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
+  const { user } = useAuth();
 
   const createEducation = useMutation({
     mutationFn: async (educationData: Omit<Education, 'id' | 'created_at' | 'updated_at'>) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { data, error } = await supabase.from('education').insert([educationData]).select();
       if (error) throw error;
       return data;
@@ -227,7 +220,6 @@ export function useEducationMutations() {
 
   const updateEducation = useMutation({
     mutationFn: async ({ id, ...educationData }: Partial<Education> & { id: string }) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { data, error } = await supabase.from('education').update(educationData).eq('id', id).select();
       if (error) throw error;
       return data;
@@ -243,7 +235,6 @@ export function useEducationMutations() {
 
   const deleteEducation = useMutation({
     mutationFn: async (id: string) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { error } = await supabase.from('education').delete().eq('id', id);
       if (error) throw error;
     },
@@ -262,12 +253,10 @@ export function useEducationMutations() {
 // Experience Mutations
 export function useExperienceMutations() {
   const queryClient = useQueryClient();
-  const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
+  const { user } = useAuth();
 
   const createExperience = useMutation({
     mutationFn: async (experienceData: Omit<Experience, 'id' | 'created_at' | 'updated_at'>) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { data, error } = await supabase.from('experience').insert([experienceData]).select();
       if (error) throw error;
       return data;
@@ -283,7 +272,6 @@ export function useExperienceMutations() {
 
   const updateExperience = useMutation({
     mutationFn: async ({ id, ...experienceData }: Partial<Experience> & { id: string }) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { data, error } = await supabase.from('experience').update(experienceData).eq('id', id).select();
       if (error) throw error;
       return data;
@@ -299,7 +287,6 @@ export function useExperienceMutations() {
 
   const deleteExperience = useMutation({
     mutationFn: async (id: string) => {
-      if (!supabase) throw new Error('Not authenticated');
       const { error } = await supabase.from('experience').delete().eq('id', id);
       if (error) throw error;
     },
@@ -318,12 +305,11 @@ export function useExperienceMutations() {
 // Profile Mutations
 export function useProfileMutations() {
   const queryClient = useQueryClient();
-  const { user } = useUser();
-  const supabase = useClerkSupabaseClient();
+  const { user } = useAuth();
 
   const updateProfile = useMutation({
     mutationFn: async (profileData: Partial<Profile>) => {
-      if (!user || !supabase) throw new Error('Not authenticated');
+      if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase
         .from('user_profiles')
         .update(profileData)
