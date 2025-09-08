@@ -10,6 +10,7 @@ export interface Profile {
   twitter: string | null;
   avatar_url: string | null;
   selected_template: string | null;
+  username: string | null;
 }
 
 export interface Project {

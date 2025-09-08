@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
-import { Pencil, Trash2, Plus, ExternalLink, Github, ImageIcon, X } from "lucide-react"
+import { IconPencil, IconTrash, IconPlus, IconExternalLink, IconBrandGithub, IconPhoto, IconX } from "@tabler/icons-react"
 import { motion } from "framer-motion"
 import { supabase } from "@/integrations/supabase/client"
 import { ProjectsSkeleton } from '@/components/ui/skeletons'
@@ -66,7 +66,7 @@ export default function Projects() {
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()} 
-            className="mt-2"
+            className="mt-2 cursor-pointer"
           >
             Retry
           </Button>
@@ -203,9 +203,9 @@ export default function Projects() {
             variant="ghost"
             size="icon"
             onClick={handleCloseForm}
-            className="h-8 w-8 rounded-full"
+            className="h-8 w-8 rounded-full cursor-pointer"
           >
-            <X size={14} />
+            <IconX size={14} />
           </Button>
         </div>
       )}
@@ -220,7 +220,7 @@ export default function Projects() {
           value={formData.title}
           onChange={handleChange}
           required
-          className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+          className="h-9 rounded-md border-border text-sm focus:border-primary focus:ring-primary"
           placeholder="Enter project title"
         />
       </div>
@@ -235,7 +235,7 @@ export default function Projects() {
           value={formData.description}
           onChange={handleChange}
           rows={3}
-          className="rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+          className="rounded-md border-border text-sm focus:border-primary focus:ring-primary"
           placeholder="Describe your project"
         />
       </div>
@@ -252,7 +252,7 @@ export default function Projects() {
             value={formData.project_url}
             onChange={handleChange}
             placeholder="https://..."
-            className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+            className="h-9 rounded-md border-border text-sm focus:border-primary focus:ring-primary"
           />
         </div>
         <div className="space-y-2">
@@ -266,7 +266,7 @@ export default function Projects() {
             value={formData.github_url}
             onChange={handleChange}
             placeholder="https://github.com/..."
-            className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+            className="h-9 rounded-md border-border text-sm focus:border-primary focus:ring-primary"
           />
         </div>
       </div>
@@ -281,7 +281,7 @@ export default function Projects() {
           value={formData.technologies}
           onChange={handleChange}
           placeholder="React, TypeScript, Tailwind CSS, etc. (comma-separated)"
-          className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black"
+          className="h-9 rounded-md border-border text-sm focus:border-primary focus:ring-primary"
         />
       </div>
 
@@ -315,14 +315,14 @@ export default function Projects() {
           type="button"
           variant="outline"
           onClick={handleCloseForm}
-          className="h-8 rounded-full border-gray-200 px-3 text-xs touch-manipulation"
+          className="h-8 rounded-full border-gray-200 px-3 text-xs touch-manipulation cursor-pointer"
         >
           Cancel
         </Button>
         <Button 
           type="submit" 
           disabled={createProject.isPending || updateProject.isPending || uploadingImage} 
-          className="h-8 rounded-full px-3 text-xs touch-manipulation"
+          className="h-8 rounded-full px-3 text-xs touch-manipulation cursor-pointer"
         >
           {createProject.isPending || updateProject.isPending ? "Saving..." : editingProject ? "Save Changes" : "Add Project"}
         </Button>
@@ -337,9 +337,9 @@ export default function Projects() {
         <Button
           variant="outline"
           onClick={() => handleOpenDialog()}
-          className="h-7 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black"
+          className="h-7 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black cursor-pointer"
         >
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <IconPlus className="mr-1.5 h-3.5 w-3.5" />
           Add Project
         </Button>
       </div>
@@ -361,12 +361,12 @@ export default function Projects() {
             transition={{ duration: 0.3 }}
           >
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-              <ImageIcon size={20} className="text-gray-400" />
+              <IconPhoto size={20} className="text-gray-400" />
             </div>
             <h3 className="text-sm font-medium">No projects yet</h3>
             <p className="mt-1 text-xs text-gray-500">Showcase your work by adding your first project</p>
-            <Button className="mt-3 h-7 rounded-full px-3 text-xs" variant="outline" onClick={() => handleOpenDialog()}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
+            <Button className="mt-3 h-7 rounded-full px-3 text-xs cursor-pointer" variant="outline" onClick={() => handleOpenDialog()}>
+              <IconPlus className="mr-1.5 h-3.5 w-3.5" />
               Add Your First Project
             </Button>
           </motion.div>
@@ -414,7 +414,7 @@ export default function Projects() {
                     </div>
                   ) : (
                     <div className="flex h-36 items-center justify-center rounded-t-md bg-gray-100">
-                      <ImageIcon size={24} className="text-gray-300" />
+                      <IconPhoto size={24} className="text-gray-300" />
                     </div>
                   )}
 
@@ -449,10 +449,10 @@ export default function Projects() {
                           size="icon" 
                           variant="ghost" 
                           asChild 
-                          className="h-8 w-8 rounded-full touch-manipulation"
+                          className="h-8 w-8 rounded-full touch-manipulation cursor-pointer"
                         >
                           <a href={project.project_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink size={14} />
+                            <IconExternalLink size={14} />
                           </a>
                         </Button>
                       ) : null}
@@ -461,10 +461,10 @@ export default function Projects() {
                           size="icon" 
                           variant="ghost" 
                           asChild 
-                          className="h-8 w-8 rounded-full touch-manipulation"
+                          className="h-8 w-8 rounded-full touch-manipulation cursor-pointer"
                         >
                           <a href={project.github_url} target="_blank" rel="noopener noreferrer">
-                            <Github size={14} />
+                            <IconBrandGithub size={14} />
                           </a>
                         </Button>
                       ) : null}
@@ -477,17 +477,17 @@ export default function Projects() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleOpenDialog(project)}
-                        className="h-7 rounded-full px-3 text-xs touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs touch-manipulation cursor-pointer"
                       >
-                        <Pencil className="mr-1 h-3 w-3" /> Edit
+                        <IconPencil className="mr-1 h-3 w-3" /> Edit
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleDelete(project.id)}
-                        className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation cursor-pointer"
                       >
-                        <Trash2 className="mr-1 h-3 w-3" /> Delete
+                        <IconTrash className="mr-1 h-3 w-3" /> Delete
                       </Button>
                     </div>
                   </CardFooter>
@@ -521,7 +521,7 @@ export default function Projects() {
           <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-end sm:space-x-2">
             <Button
               variant="default"
-              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2"
+              className="h-7 rounded-full px-3 text-xs bg-red-500 hover:bg-red-900 hover:text-gray-400 order-1 sm:order-2 cursor-pointer"
               onClick={confirmDelete}
               disabled={deleteProject.isPending}
             >
@@ -529,7 +529,7 @@ export default function Projects() {
             </Button>
             <Button
               variant="ghost"
-              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1"
+              className="h-7 rounded-full px-3 text-xs hover:bg-muted order-2 sm:order-1 cursor-pointer"
               onClick={() => setShowDeleteDialog(false)}
               disabled={deleteProject.isPending}
             >

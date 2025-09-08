@@ -7,8 +7,6 @@ import { useAuth } from '@/components/providers/AuthProvider'
 import { motion } from "framer-motion"
 import { ArrowRight, Check, Share2, LayoutDashboard, User, LogOut } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ParticleButton } from "@/components/ui/particle-button";
-import { AuthModal } from "@/components/ui/auth-modal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,18 +16,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { generatePortfolioUrl } from '@/lib/utils/portfolio-url'
 import { useState, useEffect } from "react"
 
 
 const Index = () => {
   const { user, signOut } = useAuth()
   const router = useRouter()
-  const [authModalOpen, setAuthModalOpen] = useState(false)
-  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin')
 
-  const openAuthModal = (mode: 'signin' | 'signup') => {
-    setAuthModalMode(mode)
-    setAuthModalOpen(true)
+  const navigateToAuth = (mode: 'signin' | 'signup') => {
+    router.push(`/auth?mode=${mode}`)
   }
 
   const handleSignOut = async () => {
@@ -72,7 +68,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">      {/* Announcement Banner */}
+    <div className="flex min-h-screen flex-col bg-background">      {/* Announcement Banner */}
       <div className="bg-primary py-2 text-center text-xs text-primary-foreground">
         <span className="inline-flex items-center">
           <span className="mr-2 rounded-full bg-background px-1.5 py-0.5 text-[10px] font-medium text-foreground">NEW</span>
@@ -80,8 +76,8 @@ const Index = () => {
           <Button
             variant="link"
             size="sm"
-            className="ml-2 h-auto p-0 text-xs font-normal text-primary-foreground underline"
-            onClick={() => user ? router.push('/dashboard') : openAuthModal('signup')}
+            className="ml-2 h-auto p-0 text-xs font-normal text-primary-foreground underline cursor-pointer"
+            onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
           >
             Check it out →
           </Button>
@@ -111,8 +107,8 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => router.push(`/portfolio/${user.id}`)}
-                  className="hidden h-8 items-center gap-1.5 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black sm:flex"
+                  onClick={() => router.push(generatePortfolioUrl(user))}
+                  className="hidden h-8 items-center gap-1.5 rounded-full border-border px-3 text-xs hover:bg-accent hover:text-accent-foreground cursor-pointer sm:flex"
                 >
                   <Share2 size={12} />
                   <span>View Portfolio</span>
@@ -121,7 +117,7 @@ const Index = () => {
                   variant="default"
                   size="sm"
                   onClick={() => router.push('/dashboard')}
-                  className="hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs sm:flex"
+                  className="hidden h-8 items-center gap-1.5 rounded-full px-3 text-xs cursor-pointer sm:flex"
                 >
                    <LayoutDashboard size={12}/>
                   <span>Dashboard</span>
@@ -129,7 +125,7 @@ const Index = () => {
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full cursor-pointer">
                       <Avatar className="h-8 w-8">
                         <AvatarImage src={getUserAvatar()} alt={getUserDisplayName()} />
                         <AvatarFallback>
@@ -169,16 +165,16 @@ const Index = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => openAuthModal('signin')}
-                  className="h-8 rounded-full px-3 text-xs font-normal"
+                  onClick={() => navigateToAuth('signin')}
+                  className="h-8 rounded-full px-3 text-xs font-normal cursor-pointer"
                 >
                   Sign in
                 </Button>
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => openAuthModal('signup')}
-                  className="h-8 rounded-full px-3 text-xs font-normal"
+                  onClick={() => navigateToAuth('signup')}
+                  className="h-8 rounded-full px-3 text-xs font-normal cursor-pointer"
                 >
                   Sign up
                 </Button>
@@ -223,15 +219,15 @@ const Index = () => {
                 customizable templates. Join thousands of professionals advancing their careers.
               </p>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                <ParticleButton
-                  onClick={() => user ? router.push('/dashboard') : openAuthModal('signup')}
+                <Button
+                  onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
                   size="lg"
                   variant="default"
-                  className="rounded-full"
+                  className="rounded-full cursor-pointer"
                 >
                   {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
                   <span className="ml-2">✦</span>
-                </ParticleButton>
+                </Button>
               </div>
             </motion.div>            {/* Preview Image */}
             <motion.div
@@ -303,26 +299,19 @@ const Index = () => {
               <p className="mb-10 text-base text-muted-foreground max-w-lg mx-auto">
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
-              <ParticleButton
-                onClick={() => user ? router.push('/dashboard') : openAuthModal('signup')}
+              <Button
+                onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
                 variant="default"
                 size="lg"
-                className="rounded-full"
+                className="rounded-full cursor-pointer"
               >
                 {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
                 <span className="ml-2">✦</span>
-              </ParticleButton>
+              </Button>
             </motion.div>
           </div>
         </section>
       </main>
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        defaultMode={authModalMode}
-      />
 
       {/* Footer */}
       <footer className="border-t border-border bg-background py-4">

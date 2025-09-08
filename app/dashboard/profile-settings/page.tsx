@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Upload, Trash2 } from "lucide-react"
+import { IconUpload, IconTrash } from "@tabler/icons-react"
 import { motion } from "framer-motion"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { createClient } from "@supabase/supabase-js"
@@ -261,7 +261,7 @@ export default function ProfileSettings() {
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()} 
-            className="mt-2"
+            className="mt-2 cursor-pointer"
           >
             Retry
           </Button>
@@ -308,7 +308,7 @@ export default function ProfileSettings() {
                     type="button"
                     size="sm"
                     variant="default"
-                    className="h-7 rounded-full text-black bg-gray-50 hover:bg-gray-100 px-3 text-xs"
+                    className="h-7 rounded-full text-black bg-gray-50 hover:bg-gray-100 px-3 text-xs cursor-pointer"
                     title="Change photo"
                     onClick={() => document.getElementById('avatar')?.click()}
                     disabled={uploadingAvatar}
@@ -318,7 +318,7 @@ export default function ProfileSettings() {
                       "Uploading..."
                     ) : (
                       <>
-                        <Upload size={14} className="mr-1" /> Change Photo
+                        <IconUpload size={14} className="mr-1" /> Change Photo
                       </>
                     )}
                   </Button>
@@ -327,13 +327,13 @@ export default function ProfileSettings() {
                       type="button"
                       size="sm"
                       variant="default"
-                      className="h-7 rounded-full text-red-500 bg-red-50 hover:bg-red-100 px-3 text-xs"
+                      className="h-7 rounded-full text-red-500 bg-red-50 hover:bg-red-100 px-3 text-xs cursor-pointer"
                       title="Remove photo"
                       onClick={() => setShowRemoveDialog(true)}
                       disabled={uploadingAvatar || removingAvatar}
                       aria-label="Remove profile photo"
                     >
-                      <Trash2 size={14} className="mr-1" /> Remove Photo
+                      <IconTrash size={14} className="mr-1" /> Remove Photo
                     </Button>
                   )}
                 </div>
@@ -450,7 +450,7 @@ export default function ProfileSettings() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" variant="default" disabled={uploadingAvatar || loading} size="sm" className="rounded-full">
+              <Button type="submit" variant="default" disabled={uploadingAvatar || loading} size="sm" className="rounded-full cursor-pointer">
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
             </div>

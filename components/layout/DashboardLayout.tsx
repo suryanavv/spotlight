@@ -5,9 +5,10 @@ import type React from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useEffect, useState } from "react"
-import { User, FileText, Briefcase, GraduationCap, Palette, AlignJustify, LogOut, ChevronDown, Menu, X, Share2 } from "lucide-react"
+import { IconUser, IconDashboard, IconBriefcase, IconSchool, IconBuildingStore, IconTemplate, IconLogout, IconChevronDown, IconMenu, IconX, IconShare } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { generatePortfolioUrl } from "@/lib/utils/portfolio-url"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { DashboardDataProvider } from "@/components/providers/DashboardDataProvider"
@@ -43,7 +44,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/sign-in')
+      router.push('/auth')
     }
   }, [user, loading, router])
 
@@ -63,10 +64,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading your dashboard...</p>
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-foreground border-t-transparent"></div>
+          <p className="mt-3 text-xs text-muted-foreground">Loading your dashboard...</p>
         </div>
       </div>
     )
@@ -77,25 +78,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const navItems = [
-    { icon: <FileText size={16} />, name: "Overview", path: "/dashboard" },
-    { icon: <User size={16} />, name: "Profile Settings", path: "/dashboard/profile-settings" },
+    { icon: <IconDashboard size={16} />, name: "Overview", path: "/dashboard" },
+    { icon: <IconUser size={16} />, name: "Profile Settings", path: "/dashboard/profile-settings" },
     {
-      icon: <Briefcase size={16} />,
+      icon: <IconBriefcase size={16} />,
       name: "Projects",
       path: "/dashboard/projects",
     },
     {
-      icon: <GraduationCap size={16} />,
+      icon: <IconSchool size={16} />,
       name: "Education",
       path: "/dashboard/education",
     },
     {
-      icon: <Briefcase size={16} />,
+      icon: <IconBuildingStore size={16} />,
       name: "Experience",
       path: "/dashboard/experience",
     },
     {
-      icon: <Palette size={16} />,
+      icon: <IconTemplate size={16} />,
       name: "Templates",
       path: "/dashboard/templates",
     },
@@ -119,20 +120,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <DashboardDataProvider>
-      <div className="flex h-screen bg-white">
+      <div className="flex h-screen bg-background">
         {/* Mobile header with logo and app name */}
         <header className="fixed top-5 left-0 right-0 z-50 flex flex-col items-center pointer-events-none md:hidden">
-          <div className="flex items-center justify-between h-12 px-4 w-[92vw] max-w-lg bg-white/70 backdrop-blur-sm border border-gray-200 rounded-xl shadow-lg pointer-events-auto">
+          <div className="flex items-center justify-between h-12 px-4 w-[92vw] max-w-lg bg-card/70 backdrop-blur-sm border border-border rounded-xl shadow-lg pointer-events-auto">
             <button
               onClick={() => router.push('/')}
               className="flex items-center gap-2 min-w-0 group text-left focus:outline-none"
               style={{ fontFamily: 'Inter, sans-serif' }}
             >
               <span>✦</span>
-              <span className="text-md font-semibold tracking-tight text-gray-900 group-hover:text-primary select-none">Spotlight</span>
+              <span className="text-md font-semibold tracking-tight text-foreground group-hover:text-primary select-none">Spotlight</span>
             </button>
             <button
-              className="p-2 focus:outline-none active:bg-gray-100"
+              className="p-2 focus:outline-none active:bg-accent"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle dashboard menu"
             >
@@ -145,7 +146,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <X size={20} />
+                    <IconX size={20} />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -155,7 +156,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     exit={{ opacity: 0, rotate: 90, scale: 0.8 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <Menu size={20} />
+                    <IconMenu size={20} />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -169,7 +170,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <>
               {/* Overlay for closing menu on outside click */}
               <motion.div
-                className="fixed inset-0 z-40 bg-black/30 md:hidden"
+                className="fixed inset-0 z-40 bg-foreground/30 md:hidden"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -180,7 +181,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: '100%', opacity: 0 }}
                 transition={{ type: 'spring', stiffness: 200, damping: 36 }}
-                className="fixed bottom-8 left-0 right-0 mx-auto z-50 w-[92vw] max-w-lg rounded-xl border border-gray-200 bg-white p-4 shadow-2xl md:hidden flex flex-col items-center pointer-events-auto"
+                className="fixed bottom-8 left-0 right-0 mx-auto z-50 w-[92vw] max-w-lg rounded-xl border border-border bg-card p-4 shadow-2xl md:hidden flex flex-col items-center pointer-events-auto"
               >
                 <nav className="w-full flex-1 flex flex-col justify-center items-center gap-2 mt-1 mb-1">
                   {navItems.map((item, index) => {
@@ -190,13 +191,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         key={item.path}
                         variant={active ? 'secondary' : 'ghost'}
                         size="sm"
-                        className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8"
+                        className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 cursor-pointer"
                         onClick={() => {
                           router.push(item.path)
                           setMobileMenuOpen(false)
                         }}
                       >
-                        <span className={cn('mr-2', active ? 'text-black' : 'text-gray-400')}>{item.icon}</span>
+                        <span className={cn('mr-2', active ? 'text-foreground' : 'text-muted-foreground')}>{item.icon}</span>
                         {item.name}
                       </Button>
                     )
@@ -204,19 +205,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Button
                     variant="link"
                     size="sm"
-                    className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-gray-600 hover:bg-gray-100 hover:text-gray-900 mt-1"
-                    onClick={() => router.push(`/portfolio/${user?.id}`)}
+                    className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-muted-foreground hover:bg-accent hover:text-accent-foreground mt-1 cursor-pointer"
+                    onClick={() => router.push(generatePortfolioUrl(user))}
                   >
-                    <Share2 size={16} className="mr-2" />
+                    <IconShare size={16} className="mr-2" />
                     View Public Portfolio
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-muted-foreground hover:bg-accent hover:text-accent-foreground cursor-pointer"
                     onClick={handleLogout}
                   >
-                    <LogOut size={16} className="mr-2" />
+                    <IconLogout size={16} className="mr-2" />
                     Log out
                   </Button>
                 </nav>
@@ -234,11 +235,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               exit={{ x: -320, opacity: 0 }}
               transition={{ type: "spring", stiffness: 200, damping: 36 }}
               className={cn(
-                "fixed inset-y-0 left-0 z-40 w-56 transform border-r border-gray-200 bg-white rounded-xl hidden md:block",
+                "fixed inset-y-0 left-0 z-40 w-56 transform border-r border-border bg-card rounded-xl hidden md:block",
               )}
             >
               {/* Desktop Sidebar Header with Website Name */}
-              <div className="flex h-14 items-center justify-center border-b border-gray-200 px-4 select-none">
+              <div className="flex h-14 items-center justify-center border-b border-border px-4 select-none">
                 <button
                   onClick={() => router.push('/')}
                   className="flex items-center gap-2 group text-left focus:outline-none"
@@ -263,18 +264,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           variant="ghost"
                           size="sm"
                           className={cn(
-                            "h-8 w-full justify-start rounded-md text-xs font-normal transition-all duration-200",
-                            active ? "bg-gray-100 text-black" : "text-gray-600 hover:bg-gray-100",
+                            "h-8 w-full justify-start rounded-md text-xs font-normal transition-all duration-200 cursor-pointer",
+                            active ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
                           )}
                           onClick={() => {
                             router.push(item.path)
                           }}
                         >
-                          <span className={cn("mr-2", active ? "text-black" : "text-gray-400")}>{item.icon}</span>
+                          <span className={cn("mr-2", active ? "text-accent-foreground" : "text-muted-foreground")}>{item.icon}</span>
                           {item.name}
                           {active && (
                             <motion.div
-                              className="absolute bottom-0 left-0 top-0 w-0.5 bg-black"
+                              className="absolute bottom-0 left-0 top-0 w-0.5 bg-primary"
                               layoutId="sidebar-indicator"
                               transition={{
                                 type: "spring",
@@ -293,19 +294,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <Button
                   variant="link"
                   size="sm"
-                  className="w-full flex items-center gap-2 justify-start rounded-md text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 mb-1"
-                  onClick={() => router.push(`/portfolio/${user?.id}`)}
+                  className="w-full flex items-center gap-2 justify-start rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 mb-1 cursor-pointer"
+                    onClick={() => router.push(generatePortfolioUrl(user))}
                 >
-                  <Share2 size={14} />
+                  <IconShare size={14} />
                   View Public Portfolio
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full flex items-center gap-2 justify-start rounded-md text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200"
+                  className="w-full flex items-center gap-2 justify-start rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 cursor-pointer"
                   onClick={handleLogout}
                 >
-                  <LogOut size={14} />
+                  <IconLogout size={14} />
                   Log out
                 </Button>
               </div>
@@ -314,7 +315,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </AnimatePresence>
 
         {/* Main content */}
-        <div className={cn("flex-1 overflow-auto transition-all duration-300 bg-white", sidebarOpen ? "md:ml-56" : "")}>
+        <div className={cn("flex-1 overflow-auto transition-all duration-300 bg-background", sidebarOpen ? "md:ml-56" : "")}>
           <motion.div
             className="mx-auto max-w-5xl p-4 sm:p-6"
             initial={{ opacity: 0, y: 16 }}

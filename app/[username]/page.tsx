@@ -85,10 +85,10 @@ export default function Portfolio() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white">
+      <div className="flex h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center">
-          <div className="h-6 w-6 animate-spin rounded-full border-2 border-black border-t-transparent"></div>
-          <p className="mt-3 text-xs text-gray-500">Loading Portfolio...</p>
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-foreground border-t-transparent"></div>
+          <p className="mt-3 text-xs text-muted-foreground">Loading Portfolio...</p>
         </div>
       </div>
     );
@@ -138,7 +138,7 @@ export default function Portfolio() {
     return (
       <div className="max-w-4xl mx-auto px-6 py-16 rounded-xl backdrop-blur-md border border-border bg-card/80">
         <div className="mb-16 text-center">
-          <Avatar className="w-28 h-28 mx-auto mb-6 rounded-lg border-4 border-white">
+          <Avatar className="w-28 h-28 mx-auto mb-6 rounded-lg border-4 border-card">
             <AvatarImage src={profile.avatar_url || undefined} />
             <AvatarFallback className="text-2xl bg-accent text-accent-foreground">
               {profile.full_name?.[0]?.toUpperCase()}
@@ -158,7 +158,7 @@ export default function Portfolio() {
 
           <div className="flex justify-center mt-6 space-x-3">
             {profile.website && (
-              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50 cursor-pointer" asChild>
                 <a
                   href={profile.website}
                   target="_blank"
@@ -170,7 +170,7 @@ export default function Portfolio() {
               </Button>
             )}
             {profile.github && (
-              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50 cursor-pointer" asChild>
                 <a
                   href={profile.github}
                   target="_blank"
@@ -182,7 +182,7 @@ export default function Portfolio() {
               </Button>
             )}
             {profile.linkedin && (
-              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50 cursor-pointer" asChild>
                 <a
                   href={profile.linkedin}
                   target="_blank"
@@ -194,7 +194,7 @@ export default function Portfolio() {
               </Button>
             )}
             {profile.twitter && (
-              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50" asChild>
+              <Button size="icon" variant="outline" className="rounded-full bg-background/50 backdrop-blur-sm hover:bg-accent/50 cursor-pointer" asChild>
                 <a
                   href={profile.twitter}
                   target="_blank"
@@ -222,7 +222,7 @@ export default function Portfolio() {
             <h2 className="text-xl font-bold mb-4">Projects</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {projects.map((project) => (
-                <Card key={project.id} className="overflow-hidden rounded-md shadow-md border border-gray-100 bg-white/90 hover:shadow-xl transition-all duration-300">
+                <Card key={project.id} className="overflow-hidden rounded-md shadow-md border border-border bg-card/90 hover:shadow-xl transition-all duration-300">
                   {project.image_url && (
                     <div className="h-40">
                       <img
@@ -254,7 +254,7 @@ export default function Portfolio() {
                       )}
                     <div className="flex gap-2 mt-4">
                       {project.project_url && (
-                        <Button size="sm" variant="outline" asChild>
+                        <Button size="sm" variant="outline" className="cursor-pointer" asChild>
                           <a
                             href={project.project_url}
                             target="_blank"
@@ -266,7 +266,7 @@ export default function Portfolio() {
                         </Button>
                       )}
                       {project.github_url && (
-                        <Button size="sm" variant="outline" asChild>
+                        <Button size="sm" variant="outline" className="cursor-pointer" asChild>
                           <a
                             href={project.github_url}
                             target="_blank"
@@ -345,27 +345,27 @@ export default function Portfolio() {
   // Modern template
   const renderModernTemplate = () => {
     return (
-      <div className="bg-gray-50 min-h-screen">
-        <div className="w-full bg-black py-16">
+      <div className="bg-secondary min-h-screen">
+        <div className="w-full bg-primary py-16">
           <div className="max-w-4xl mx-auto px-4">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-              <Avatar className="w-24 h-24 border-4 border-white">
+              <Avatar className="w-24 h-24 border-4 border-primary-foreground">
                 <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback className="text-3xl">
                   {profile.full_name?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="text-center md:text-left">
-                <h1 className="text-3xl font-bold text-white">
+                <h1 className="text-3xl font-bold text-primary-foreground">
                   {profile.full_name}
                 </h1>
                 {profile.headline && (
-                  <h2 className="text-xl text-white/80 mt-2">
+                  <h2 className="text-xl text-primary-foreground/80 mt-2">
                     {profile.headline}
                   </h2>
                 )}
                 {profile.location && (
-                  <p className="flex items-center justify-center md:justify-start mt-2 text-sm text-white/80">
+                  <p className="flex items-center justify-center md:justify-start mt-2 text-sm text-primary-foreground/80">
                     <IconMapPin size={16} className="mr-1" /> {profile.location}
                   </p>
                 )}
@@ -375,6 +375,7 @@ export default function Portfolio() {
                     <Button
                       size="icon"
                       variant="secondary"
+                      className="cursor-pointer"
                       asChild
                     >
                       <a
@@ -391,6 +392,7 @@ export default function Portfolio() {
                     <Button
                       size="icon"
                       variant="secondary"
+                      className="cursor-pointer"
                       asChild
                     >
                       <a
@@ -407,6 +409,7 @@ export default function Portfolio() {
                     <Button
                       size="icon"
                       variant="secondary"
+                      className="cursor-pointer"
                       asChild
                     >
                       <a
@@ -423,6 +426,7 @@ export default function Portfolio() {
                     <Button
                       size="icon"
                       variant="secondary"
+                      className="cursor-pointer"
                       asChild
                     >
                       <a
@@ -443,7 +447,7 @@ export default function Portfolio() {
 
         <div className="max-w-4xl mx-auto px-4 py-12">
           {profile.bio && (
-            <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+            <div className="bg-card rounded-lg p-6 shadow-sm mb-8">
               <h2 className="text-2xl font-bold mb-4 border-b pb-2">
                 About Me
               </h2>
@@ -454,7 +458,7 @@ export default function Portfolio() {
           )}
 
           {projects.length > 0 && (
-            <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+            <div className="bg-card rounded-lg p-6 shadow-sm mb-8">
               <h2 className="text-2xl font-bold mb-6 border-b pb-2">
                 Projects
               </h2>
@@ -497,7 +501,7 @@ export default function Portfolio() {
                         )}
                       <div className="flex gap-3 mt-4">
                         {project.project_url && (
-                          <Button variant="outline" asChild>
+                          <Button variant="outline" className="cursor-pointer" asChild>
                             <a
                               href={project.project_url}
                               target="_blank"
@@ -509,7 +513,7 @@ export default function Portfolio() {
                           </Button>
                         )}
                         {project.github_url && (
-                          <Button variant="outline" asChild>
+                          <Button variant="outline" className="cursor-pointer" asChild>
                             <a
                               href={project.github_url}
                               target="_blank"
@@ -627,6 +631,7 @@ export default function Portfolio() {
                   <Button
                     size="icon"
                     variant="secondary"
+                    className="cursor-pointer"
                     asChild
                   >
                     <a
@@ -643,6 +648,7 @@ export default function Portfolio() {
                   <Button
                     size="icon"
                     variant="secondary"
+                    className="cursor-pointer"
                     asChild
                   >
                     <a
@@ -659,6 +665,7 @@ export default function Portfolio() {
                   <Button
                     size="icon"
                     variant="secondary"
+                    className="cursor-pointer"
                     asChild
                   >
                     <a
@@ -675,6 +682,7 @@ export default function Portfolio() {
                   <Button
                     size="icon"
                     variant="secondary"
+                    className="cursor-pointer"
                     asChild
                   >
                     <a
@@ -745,7 +753,7 @@ export default function Portfolio() {
                       <div className="flex gap-3 mt-6">
                         {project.project_url && (
                           <Button
-                            className="bg-white hover:bg-gray-200 text-black"
+                            className="bg-white hover:bg-gray-200 text-black cursor-pointer"
                             asChild
                           >
                             <a
@@ -760,7 +768,7 @@ export default function Portfolio() {
                         {project.github_url && (
                           <Button
                             variant="outline"
-                            className="border-gray-700 text-gray-300 hover:bg-gray-800"
+                            className="border-gray-700 text-gray-300 hover:bg-gray-800 cursor-pointer"
                             asChild
                           >
                             <a
@@ -879,6 +887,7 @@ export default function Portfolio() {
                     <Button
                       size="sm"
                       variant="secondary"
+                      className="cursor-pointer"
                       asChild
                     >
                       <a
@@ -894,6 +903,7 @@ export default function Portfolio() {
                     <Button
                       size="sm"
                       variant="secondary"
+                      className="cursor-pointer"
                       asChild
                     >
                       <a
@@ -914,13 +924,13 @@ export default function Portfolio() {
         <div className="max-w-5xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             {profile.bio && (
-              <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+              <div className="bg-card rounded-lg p-6 shadow-sm mb-8">
                 <h2 className="text-xl font-bold mb-4 border-b pb-2">About</h2>
                 <p className="text-gray-700">{profile.bio}</p>
               </div>
             )}
 
-            <div className="bg-white rounded-lg p-6 shadow-sm mb-8">
+            <div className="bg-card rounded-lg p-6 shadow-sm mb-8">
               <h2 className="text-xl font-bold mb-4 border-b pb-2">Contact</h2>
 
               {profile.location && (
@@ -1085,7 +1095,7 @@ export default function Portfolio() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-black"
+                            className="text-black cursor-pointer"
                             asChild
                           >
                             <a
@@ -1102,7 +1112,7 @@ export default function Portfolio() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-black"
+                            className="text-black cursor-pointer"
                             asChild
                           >
                             <a

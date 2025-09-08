@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Check } from "lucide-react";
+import { IconCheck } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
@@ -140,11 +140,11 @@ export default function Templates() {
                   <Button className="h-7 w-full rounded-full text-xs" disabled
                   // className="h-7 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black"
                   >
-                    <Check className="mr-1.5 h-3.5 w-3.5" /> Selected
+                    <IconCheck className="mr-1.5 h-3.5 w-3.5" /> Selected
                   </Button>
                 ) : (
                   <Button
-                    className="h-7 w-full rounded-full text-xs"
+                    className="h-7 w-full rounded-full text-xs cursor-pointer"
                     onClick={() => handleTemplateSelect(template.id)}
                     disabled={loading}
                   >

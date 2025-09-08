@@ -27,7 +27,7 @@ export function RefreshButton({
       disabled={isLoading}
       size={size}
       variant={variant}
-      className={className}
+      className={`${className || ''} cursor-pointer`}
     >
       <RefreshCw 
         size={16} 

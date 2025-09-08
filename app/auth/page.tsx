@@ -1,36 +1,37 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useAuth } from '@/components/providers/AuthProvider'
 import { toast } from "sonner"
-import { useRouter } from "next/navigation"
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog"
+import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-
-interface AuthModalProps {
-  isOpen: boolean
-  onClose: () => void
-  defaultMode?: 'signin' | 'signup'
-}
+import { IconArrowLeft } from "@tabler/icons-react"
 
 type AuthMode = 'signin' | 'signup'
 
-export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModalProps) => {
-  const [mode, setMode] = useState<AuthMode>(defaultMode)
+function AuthPageContent() {
+  const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-  
+
   const { signIn, signUp, signInWithGoogle } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Check URL params for mode
+  React.useEffect(() => {
+    const urlMode = searchParams.get('mode')
+    if (urlMode === 'signup') {
+      setMode('signup')
+    }
+  }, [searchParams])
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -46,6 +47,7 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode)
     resetForm()
+    router.replace(`/auth?mode=${newMode}`, { scroll: false })
   }
 
   const handleEmailAuth = async () => {
@@ -53,20 +55,20 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
       setError("Please fill in all fields.")
       return
     }
-    
+
     if (!validateEmail(email)) {
       setError("Please enter a valid email address.")
       return
     }
-    
+
     if (mode === 'signup' && password.length < 6) {
       setError("Password must be at least 6 characters.")
       return
     }
-    
+
     setError("")
     setLoading(true)
-    
+
     try {
       if (mode === 'signin') {
         const { error } = await signIn(email, password)
@@ -74,7 +76,6 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
           setError(error.message)
         } else {
           toast.success('Welcome back!')
-          onClose()
           router.push('/dashboard')
         }
       } else {
@@ -85,7 +86,6 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
           setError(error.message)
         } else {
           toast.success('Account created! Please check your email to verify your account.')
-          onClose()
           switchMode('signin')
         }
       }
@@ -99,13 +99,12 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
   const handleGoogleAuth = async () => {
     setError("")
     setLoading(true)
-    
+
     try {
       const { error } = await signInWithGoogle()
       if (error) {
         setError(error.message)
       } else {
-        onClose()
         // OAuth will redirect automatically
       }
     } catch (err) {
@@ -115,39 +114,48 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
     }
   }
 
-  const handleClose = () => {
-    resetForm()
-    onClose()
-  }
-
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="text-center space-y-2">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {mode === 'signin' ? 'Sign in to Spotlight' : 'Create your account'}
-            </h2>
-            <p className="text-sm text-gray-600">
-              {mode === 'signin' 
-                ? 'Welcome back! Please sign in to continue' 
-                : 'Get started with Spotlight and build your portfolio'
-              }
-            </p>
-          </div>
+    <div className="min-h-screen bg-background flex flex-col justify-center py-8 px-4 sm:px-6">
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        {/* Back to Home Link */}
+        <div className="flex justify-start mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <IconArrowLeft className="mr-1.5 h-3 w-3" />
+            Back to home
+          </Link>
+        </div>
 
+        {/* Header */}
+        <div className="text-center space-y-1.5">
+          <div className="flex justify-center mb-3">
+            <span className="text-primary text-lg">✦</span>
+          </div>
+          <h1 className="text-xl font-semibold text-foreground">
+            {mode === 'signin' ? 'Sign in to Spotlight' : 'Create your account'}
+          </h1>
+          <p className="text-xs text-muted-foreground">
+            {mode === 'signin'
+              ? 'Welcome back! Please sign in to continue'
+              : 'Get started with Spotlight and build your portfolio'
+            }
+          </p>
+        </div>
+
+        <div className="mt-6 space-y-4">
           {/* Google Button */}
           <Button
             variant="outline"
             onClick={handleGoogleAuth}
             disabled={loading}
-            className="w-full rounded-full h-12 text-sm font-medium border-gray-200 hover:bg-gray-50"
+            className="w-full rounded-full h-9 text-xs font-medium border-border hover:bg-accent hover:text-accent-foreground cursor-pointer"
           >
             <img
               src="https://www.svgrepo.com/show/475656/google-color.svg"
               alt="Google"
-              className="w-5 h-5 mr-3"
+              className="w-4 h-4 mr-2"
             />
             Continue with Google
           </Button>
@@ -155,18 +163,18 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
           {/* Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200" />
+              <span className="w-full border-t border-border" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-gray-500">or</span>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-background px-3 text-muted-foreground">or</span>
             </div>
           </div>
 
           {/* Form */}
-          <form onSubmit={(e) => { e.preventDefault(); handleEmailAuth(); }} className="space-y-5">
+          <form onSubmit={(e) => { e.preventDefault(); handleEmailAuth(); }} className="space-y-4">
             {mode === 'signup' && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm font-medium text-gray-700">
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName" className="text-xs font-medium text-foreground">
                   Full Name
                 </Label>
                 <Input
@@ -176,14 +184,14 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   disabled={loading}
-                  className="h-12 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
+                  className="h-9 text-xs"
                   required
                 />
               </div>
             )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+
+            <div className="space-y-1.5">
+              <Label htmlFor="email" className="text-xs font-medium text-foreground">
                 Email address
               </Label>
               <Input
@@ -193,13 +201,13 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={loading}
-                className="h-12 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
+                className="h-9 text-xs"
                 required
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password" className="text-xs font-medium text-foreground">
                 Password
               </Label>
               <Input
@@ -209,38 +217,38 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
-                className="h-12 border-gray-200 focus:border-gray-900 focus:ring-gray-900"
+                className="h-9 text-xs"
                 required
               />
             </div>
 
             {error && (
-              <div className="text-sm text-red-600">{error}</div>
+              <div className="text-xs text-destructive">{error}</div>
             )}
 
             {mode === 'signin' && (
               <div className="flex justify-end">
-                <Button 
-                  variant="link" 
+                <Button
+                  variant="link"
                   onClick={() => toast.info('Password reset feature coming soon!')}
-                  className="px-0 text-sm text-gray-600 hover:text-gray-900"
+                  className="px-0 text-xs text-muted-foreground hover:text-foreground h-auto cursor-pointer"
                   type="button"
                 >
                   Forgot password?
                 </Button>
               </div>
             )}
-            
-            <Button 
-              type="submit" 
+
+            <Button
+              type="submit"
               disabled={loading}
-              className="w-full rounded-full h-12 bg-gray-800 hover:bg-gray-900 text-white font-medium"
+              className="w-full rounded-full h-9 font-medium text-xs cursor-pointer"
             >
               {loading ? (
                 mode === 'signin' ? "Signing in..." : "Creating account..."
               ) : (
                 <>
-                  Continue <span className="ml-2">▶</span>
+                  Continue
                 </>
               )}
             </Button>
@@ -248,20 +256,28 @@ export const AuthModal = ({ isOpen, onClose, defaultMode = 'signin' }: AuthModal
 
           {/* Mode Switch */}
           <div className="text-center">
-            <span className="text-sm text-gray-600">
+            <span className="text-xs text-muted-foreground">
               {mode === 'signin' ? "Don't have an account?" : "Already have an account?"}{' '}
             </span>
             <Button
               variant="link"
               onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
               disabled={loading}
-              className="px-0 text-sm font-medium text-gray-900 hover:text-gray-700"
+              className="px-0 text-xs font-medium hover:underline h-auto cursor-pointer"
             >
               {mode === 'signin' ? 'Sign up' : 'Sign in'}
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
-} 
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AuthPageContent />
+    </Suspense>
+  )
+}

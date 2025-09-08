@@ -4,10 +4,11 @@ import { useDashboardData } from '@/lib/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { Share2, Briefcase, GraduationCap, FileText, CheckCircle, XCircle } from 'lucide-react';
+import { IconShare, IconBriefcase, IconSchool, IconFileText, IconCheck, IconX } from '@tabler/icons-react';
 import { motion } from "framer-motion";
 import { OverviewSkeleton } from '@/components/ui/skeletons';
 import { RefreshButton } from '@/components/ui/refresh-button';
+import { generatePortfolioUrl } from '@/lib/utils/portfolio-url';
 
 export default function Overview() {
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export default function Overview() {
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()} 
-            className="mt-2"
+            className="mt-2 cursor-pointer"
           >
             Retry
           </Button>
@@ -63,12 +64,12 @@ export default function Overview() {
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button
-          onClick={() => router.push(`/portfolio/${user?.id}`)}
+          onClick={() => router.push(generatePortfolioUrl(user))}
           variant="secondary"
           size="sm"
-          className="flex items-center text-xs rounded-full border-gray-200 hover:bg-gray-100 hover:text-black"
+          className="flex items-center text-xs rounded-full border-border hover:bg-accent hover:text-accent-foreground"
         >
-          <Share2 size={16} className="mr-1"/>
+          <IconShare size={16} className="mr-1"/>
           View Public Portfolio
         </Button>
       </div>
@@ -79,21 +80,21 @@ export default function Overview() {
           {
             title: "Projects",
             count: projects.length,
-            icon: <FileText size={18} className="text-primary" />,
+            icon: <IconFileText size={18} className="text-primary" />,
             path: "/dashboard/projects",
             description: "Manage and showcase your portfolio projects",
           },
           {
             title: "Education",
             count: education.length,
-            icon: <GraduationCap size={18} className="text-primary" />,
+            icon: <IconSchool size={18} className="text-primary" />,
             path: "/dashboard/education",
             description: "Academic background and certifications"
           },
           {
             title: "Experience",
             count: experience.length,
-            icon: <Briefcase size={18} className="text-primary" />,
+            icon: <IconBriefcase size={18} className="text-primary" />,
             path: "/dashboard/experience",
             description: "Work history and professional experience"
           },
@@ -121,7 +122,7 @@ export default function Overview() {
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="w-full rounded-full"
+                  className="w-full rounded-full cursor-pointer"
                   onClick={() => router.push(stat.path)}
                 >
                   Manage {stat.title}
@@ -175,9 +176,9 @@ export default function Overview() {
                 >
                   <div className="flex items-center gap-3">
                     {item.completed ? (
-                      <CheckCircle size={16} className="text-success" />
+                      <IconCheck size={16} className="text-success" />
                     ) : (
-                      <XCircle size={16} className="text-muted-foreground opacity-50" />
+                      <IconX size={16} className="text-muted-foreground opacity-50" />
                     )}
                     <p className={`font-medium ${item.completed ? 'text-foreground' : 'text-muted-foreground'}`}>{item.name}</p>
                   </div>
@@ -185,7 +186,7 @@ export default function Overview() {
                     <Button
                       variant="default"
                       size="sm"
-                      className="opacity-80 group-hover:opacity-100 transition-opacity rounded-full"
+                      className="opacity-80 group-hover:opacity-100 transition-opacity rounded-full cursor-pointer"
                       onClick={() => {
                         if (
                           item.name === "Full Name" ||

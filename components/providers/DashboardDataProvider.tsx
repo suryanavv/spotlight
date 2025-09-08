@@ -61,7 +61,7 @@ export function DashboardDataProvider({ children }: { children: React.ReactNode 
               : [];
             
             const profile = profileResult.status === 'fulfilled' && !profileResult.value.error
-              ? profileResult.value.data as Profile
+              ? profileResult.value.data as unknown as Profile
               : null;
 
             return {

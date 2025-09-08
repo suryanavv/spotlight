@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from 'sonner'
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const lastSignInToastRef = useRef<number>(0)
 
   useEffect(() => {
     // Get initial session
@@ -47,7 +48,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false)
 
         if (event === 'SIGNED_IN') {
-          toast.success('Successfully signed in!')
+          // Prevent duplicate sign-in toasts (throttle to once per 2 seconds)
+          const now = Date.now()
+          if (now - lastSignInToastRef.current > 2000) {
+            toast.success('Successfully signed in!')
+            lastSignInToastRef.current = now
+          }
         } else if (event === 'SIGNED_OUT') {
           toast.success('Successfully signed out!')
         }

@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { format, parseISO } from "date-fns"
-import { Pencil, Trash2, Plus, Briefcase, MapPin, X } from "lucide-react"
+import { IconPencil, IconTrash, IconPlus, IconBuildingStore, IconMapPin, IconX } from "@tabler/icons-react"
 import { motion } from "framer-motion"
 import { MonthYearPicker } from "@/components/month-year-picker"
 import { ExperienceSkeleton } from '@/components/ui/skeletons';
@@ -67,7 +67,7 @@ export default function ExperiencePage() {
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()} 
-            className="mt-2"
+            className="mt-2 cursor-pointer"
           >
             Retry
           </Button>
@@ -219,7 +219,7 @@ export default function ExperiencePage() {
             onClick={handleCloseForm}
             className="h-8 w-8 rounded-full"
           >
-            <X size={14} />
+            <IconX size={14} />
           </Button>
         </div>
       )}
@@ -320,7 +320,7 @@ export default function ExperiencePage() {
           type="button"
           variant="outline"
           onClick={handleCloseForm}
-          className="h-8 rounded-full border-gray-200 px-3 text-xs touch-manipulation"
+            className="h-8 rounded-full border-gray-200 px-3 text-xs touch-manipulation cursor-pointer"
         >
           Cancel
         </Button>
@@ -344,7 +344,7 @@ export default function ExperiencePage() {
           onClick={() => handleOpenDialog()}
           className="h-7 rounded-full border-gray-200 px-3 text-xs hover:bg-gray-50 hover:text-black touch-manipulation"
         >
-          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          <IconPlus className="mr-1.5 h-3.5 w-3.5" />
           Add Experience
         </Button>
       </div>
@@ -366,12 +366,12 @@ export default function ExperiencePage() {
             transition={{ duration: 0.3 }}
           >
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-              <Briefcase size={20} className="text-gray-400" />
+              <IconBuildingStore size={20} className="text-gray-400" />
             </div>
             <h3 className="text-sm font-medium">No work experience yet</h3>
             <p className="mt-1 text-xs text-gray-500">Showcase your professional experience</p>
             <Button className="mt-3 h-7 rounded-full px-3 text-xs touch-manipulation" variant="outline" onClick={() => handleOpenDialog()}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              <IconPlus className="mr-1.5 h-3.5 w-3.5" />
               Add Experience
             </Button>
           </motion.div>
@@ -419,7 +419,7 @@ export default function ExperiencePage() {
                     <div className="text-xs font-medium">{experience.company}</div>
                     {experience.location ? (
                       <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
-                        <MapPin size={12} />
+                        <IconMapPin size={12} />
                         <span>{experience.location}</span>
                       </div>
                     ) : (
@@ -438,9 +438,9 @@ export default function ExperiencePage() {
                         size="sm"
                         variant="ghost"
                         onClick={() => handleOpenDialog(experience)}
-                        className="h-7 rounded-full px-3 text-xs touch-manipulation"
+                        className="h-7 rounded-full px-3 text-xs touch-manipulation cursor-pointer"
                       >
-                        <Pencil size={14} className="mr-1"/>Edit
+                        <IconPencil size={14} className="mr-1"/>Edit
                       </Button>
                       <Button
                         size="sm"
@@ -448,7 +448,7 @@ export default function ExperiencePage() {
                         onClick={() => handleDelete(experience.id)}
                         className="h-7 rounded-full px-3 text-xs text-red-600 hover:bg-red-50 hover:text-red-700 touch-manipulation"
                       >
-                        <Trash2 size={14} className="mr-1"/>Delete
+                        <IconTrash size={14} className="mr-1"/>Delete
                       </Button>
                     </div>
                   </CardFooter>

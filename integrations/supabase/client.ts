@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { Database } from './types'
 
-const supabaseUrl = 'https://iycblctxyhfdetorspct.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5Y2JsY3R4eWhmZGV0b3JzcGN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyMzU1NDYsImV4cCI6MjA2MjgxMTU0Nn0.Q1gyvxhOrsc6zYyZvNw1e9Bcon-j3be-zUNJR2WrwQc'
+const supabaseUrl = 'https://shkafuasvbqezptssyds.supabase.co'
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNoa2FmdWFzdmJxZXpwdHNzeWRzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcyMjQ0OTcsImV4cCI6MjA3MjgwMDQ5N30.D2pbFge9K5NPGRu1N_kA_Irxeek1OXgsz1j5aABRh4s'
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
