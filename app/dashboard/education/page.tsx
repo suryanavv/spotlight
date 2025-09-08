@@ -153,13 +153,30 @@ export default function EducationPage() {
     e.preventDefault()
     if (!user) return
 
+    // Basic validation
+    if (!formData.institution.trim()) {
+      toast.error('Institution is required')
+      return
+    }
+    if (!formData.degree.trim()) {
+      toast.error('Degree/Certificate is required')
+      return
+    }
+    if (!formData.start_date) {
+      toast.error('Start date is required')
+      return
+    }
+
     try {
       const educationData = {
-        ...formData,
-        user_id: user.id,
-        // Convert empty strings to null for date fields
+        institution: formData.institution,
+        degree: formData.degree,
+        field_of_study: formData.field_of_study || null,
         start_date: formData.start_date || null,
         end_date: formData.current_education ? null : (formData.end_date || null),
+        current_education: formData.current_education,
+        description: formData.description || null,
+        user_id: user.id,
       }
 
       if (editingEducation) {
@@ -464,6 +481,9 @@ export default function EducationPage() {
             <DialogTitle className="text-sm font-medium">
               {editingEducation ? "Edit Education" : "Add New Education"}
             </DialogTitle>
+            <DialogDescription>
+              {editingEducation ? "Update your education details below." : "Add your educational background and achievements."}
+            </DialogDescription>
           </DialogHeader>
           {renderForm()}
         </DialogContent>

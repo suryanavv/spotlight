@@ -10,7 +10,7 @@ export interface Profile {
   twitter: string | null;
   avatar_url: string | null;
   selected_template: string | null;
-  username: string | null;
+  username?: string | null;
 }
 
 export interface Project {
@@ -49,6 +49,19 @@ export interface Experience {
   start_date: string | null;
   end_date: string | null;
   current_job: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface Blog {
+  id: string;
+  user_id: string;
+  title: string;
+  slug: string | null;
+  excerpt: string | null;
+  content: string;
+  published: boolean | null;
+  published_at: string | null;
   created_at: string | null;
   updated_at: string | null;
 }

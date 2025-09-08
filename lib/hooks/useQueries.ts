@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/components/providers/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import type { Project, Education, Experience, Profile } from '@/types/database';
+import type { Project, Education, Experience, Profile, Blog } from '@/types/database';
 import { toast } from 'sonner';
 
 // Query Keys for consistent caching
@@ -23,7 +23,7 @@ export function useDashboardData() {
       if (!user) throw new Error('Not authenticated');
       
       // Execute all queries in parallel for better performance
-      const [projectsResult, educationResult, experienceResult, profileResult] = await Promise.allSettled([
+      const [projectsResult, educationResult, experienceResult, blogsResult, profileResult] = await Promise.allSettled([
         supabase
           .from('projects')
           .select('*')
@@ -40,6 +40,11 @@ export function useDashboardData() {
           .eq('user_id', user.id)
           .order('end_date', { ascending: false }),
         supabase
+          .from('blogs')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
           .from('user_profiles')
           .select('*')
           .eq('id', user.id)
@@ -47,18 +52,22 @@ export function useDashboardData() {
       ]);
 
       // Handle results and extract data
-      const projects = projectsResult.status === 'fulfilled' && !projectsResult.value.error 
-        ? projectsResult.value.data as Project[] 
+      const projects = projectsResult.status === 'fulfilled' && !projectsResult.value.error
+        ? projectsResult.value.data as Project[]
         : [];
-      
+
       const education = educationResult.status === 'fulfilled' && !educationResult.value.error
         ? educationResult.value.data as Education[]
         : [];
-      
+
       const experience = experienceResult.status === 'fulfilled' && !experienceResult.value.error
         ? experienceResult.value.data as Experience[]
         : [];
-      
+
+      const blogs = blogsResult.status === 'fulfilled' && !blogsResult.value.error
+        ? blogsResult.value.data as Blog[]
+        : [];
+
       const profile = profileResult.status === 'fulfilled' && !profileResult.value.error
         ? profileResult.value.data as unknown as Profile
         : null;
@@ -67,6 +76,7 @@ export function useDashboardData() {
         projects,
         education,
         experience,
+        blogs,
         profile,
       };
     },
@@ -97,7 +107,7 @@ export function useDashboardData() {
 // Individual data selectors that use the combined data
 export function useProjects() {
   const { data, isLoading, error, isInitialLoading, hasData } = useDashboardData();
-  
+
   return {
     data: data?.projects || [],
     isLoading,
@@ -109,7 +119,7 @@ export function useProjects() {
 
 export function useEducation() {
   const { data, isLoading, error, isInitialLoading, hasData } = useDashboardData();
-  
+
   return {
     data: data?.education || [],
     isLoading,
@@ -121,7 +131,7 @@ export function useEducation() {
 
 export function useExperience() {
   const { data, isLoading, error, isInitialLoading, hasData } = useDashboardData();
-  
+
   return {
     data: data?.experience || [],
     isLoading,
@@ -131,9 +141,21 @@ export function useExperience() {
   };
 }
 
+export function useBlogs() {
+  const { data, isLoading, error, isInitialLoading, hasData } = useDashboardData();
+
+  return {
+    data: data?.blogs || [],
+    isLoading,
+    error,
+    isInitialLoading,
+    hasData,
+  };
+}
+
 export function useProfile() {
   const { data, isLoading, error, isInitialLoading, hasData } = useDashboardData();
-  
+
   return {
     data: data?.profile || null,
     isLoading,
@@ -338,4 +360,59 @@ export function useProfileMutations() {
   });
 
   return { updateProfile };
+}
+
+// Blog Mutations
+export function useBlogMutations() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const createBlog = useMutation({
+    mutationFn: async (blogData: Omit<Blog, 'id' | 'created_at' | 'updated_at' | 'published_at'>) => {
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.from('blogs').insert([blogData]).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData(user?.id || '') });
+      toast.success('Blog post created!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error creating blog post');
+    },
+  });
+
+  const updateBlog = useMutation({
+    mutationFn: async ({ id, ...blogData }: Partial<Blog> & { id: string }) => {
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.from('blogs').update(blogData).eq('id', id).select();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData(user?.id || '') });
+      toast.success('Blog post updated!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error updating blog post');
+    },
+  });
+
+  const deleteBlog = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('Not authenticated');
+      const { error } = await supabase.from('blogs').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboardData(user?.id || '') });
+      toast.success('Blog post deleted!');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Error deleting blog post');
+    },
+  });
+
+  return { createBlog, updateBlog, deleteBlog };
 } 

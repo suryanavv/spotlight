@@ -27,6 +27,9 @@ export default function ProfileSettings() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showRemoveDialog, setShowRemoveDialog] = useState(false)
   const [removingAvatar, setRemovingAvatar] = useState(false)
+  const [usernameError, setUsernameError] = useState("")
+  const [checkingUsername, setCheckingUsername] = useState(false)
+  const [usernameTimeout, setUsernameTimeout] = useState<NodeJS.Timeout | null>(null)
 
   // Use React Query hooks
   const { data: profile, isInitialLoading, hasData, error } = useProfile()
@@ -34,6 +37,7 @@ export default function ProfileSettings() {
 
   const [formData, setFormData] = useState({
     full_name: "",
+    username: "",
     headline: "",
     bio: "",
     location: "",
@@ -44,15 +48,99 @@ export default function ProfileSettings() {
     avatar_url: "",
   })
 
+  // Username validation function
+  const validateUsername = (username: string) => {
+    if (!username) return "Username is required"
+    if (username.length < 3) return "Username must be at least 3 characters"
+    if (username.length > 30) return "Username must be less than 30 characters"
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) return "Username can only contain letters, numbers, hyphens, and underscores"
+    return null
+  }
+
+  // Check username uniqueness
+  const checkUsernameAvailability = async (username: string) => {
+    if (!username || username === profile?.username) return
+
+    const validationError = validateUsername(username)
+    if (validationError) {
+      setUsernameError(validationError)
+      return
+    }
+
+    setCheckingUsername(true)
+    try {
+      if (!user?.id) {
+        setUsernameError("User not found")
+        return
+      }
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('username')
+        .eq('username', username)
+        .neq('id', user.id) // Exclude current user's profile
+        .single()
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        setUsernameError("Error checking username availability")
+      } else if (data) {
+        setUsernameError("This username is already taken")
+      } else {
+        setUsernameError("")
+      }
+    } catch (error) {
+      setUsernameError("Error checking username availability")
+    } finally {
+      setCheckingUsername(false)
+    }
+  }
+
   // Move functions to top to fix hoisting errors
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
+
+    if (name === 'username') {
+      // Clear error when user starts typing
+      setUsernameError("")
+
+      // Clear existing timeout
+      if (usernameTimeout) {
+        clearTimeout(usernameTimeout)
+      }
+
+      // Set new timeout for debounced validation
+      const timeout = setTimeout(() => {
+        if (value && value !== profile?.username) {
+          checkUsernameAvailability(value)
+        }
+      }, 1000) // 1 second delay
+
+      setUsernameTimeout(timeout)
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!user || !supabase) return
+
+    // Validate username before submission
+    if (formData.username) {
+      const validationError = validateUsername(formData.username)
+      if (validationError) {
+        setUsernameError(validationError)
+        return
+      }
+
+      // Check username availability if it's changed
+      if (formData.username !== profile?.username) {
+        await checkUsernameAvailability(formData.username)
+        if (usernameError) {
+          return
+        }
+      }
+    }
 
     setLoading(true)
     try {
@@ -178,6 +266,7 @@ export default function ProfileSettings() {
           // Profile exists, use it
           setFormData({
             full_name: existingProfile.full_name || '',
+            username: existingProfile.username || '',
             headline: existingProfile.headline || '',
             bio: existingProfile.bio || '',
             location: existingProfile.location || '',
@@ -192,6 +281,7 @@ export default function ProfileSettings() {
           const defaultProfile = {
             id: user.id,
             full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '',
+            username: '',
             headline: '',
             bio: '',
             location: '',
@@ -228,6 +318,7 @@ export default function ProfileSettings() {
           // Set form data with defaults
           setFormData({
             full_name: defaultProfile.full_name,
+            username: defaultProfile.username,
             headline: defaultProfile.headline,
             bio: defaultProfile.bio,
             location: defaultProfile.location,
@@ -247,6 +338,15 @@ export default function ProfileSettings() {
 
     initializeProfile();
   }, [user, profile, authLoading]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (usernameTimeout) {
+        clearTimeout(usernameTimeout)
+      }
+    }
+  }, [usernameTimeout])
 
   // Show a skeleton while the initial data is loading and we don't have any cached data
   if ((isInitialLoading && !hasData) || authLoading) {
@@ -353,16 +453,42 @@ export default function ProfileSettings() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="headline">Professional Title</Label>
+                    <Label htmlFor="username">Username</Label>
                     <Input
-                      id="headline"
-                      name="headline"
-                      value={formData.headline}
+                      id="username"
+                      name="username"
+                      value={formData.username}
                       onChange={handleChange}
-                      placeholder="Full Stack Developer"
-                      className="border-gray-200 focus:border-black focus:ring-black"
+                      placeholder="johndoe"
+                      className={`border-gray-200 focus:border-black focus:ring-black ${
+                        usernameError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+                      }`}
+                      disabled={checkingUsername}
                     />
+                    <div className="text-xs">
+                      {checkingUsername ? (
+                        <span className="text-blue-600">Checking availability...</span>
+                      ) : usernameError ? (
+                        <span className="text-red-600">{usernameError}</span>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          This will be your portfolio URL: /{formData.username || 'username'}
+                        </span>
+                      )}
+                    </div>
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="headline">Professional Title</Label>
+                  <Input
+                    id="headline"
+                    name="headline"
+                    value={formData.headline}
+                    onChange={handleChange}
+                    placeholder="Full Stack Developer"
+                    className="border-gray-200 focus:border-black focus:ring-black"
+                  />
                 </div>
 
                 <div className="space-y-2">

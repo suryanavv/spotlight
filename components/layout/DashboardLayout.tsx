@@ -4,8 +4,10 @@ import type React from "react"
 
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from '@/components/providers/AuthProvider'
+import { useDashboardData } from '@/lib/hooks/useQueries'
+import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from "react"
-import { IconUser, IconDashboard, IconBriefcase, IconSchool, IconBuildingStore, IconTemplate, IconLogout, IconChevronDown, IconMenu, IconX, IconShare } from "@tabler/icons-react"
+import { IconUser, IconDashboard, IconBriefcase, IconSchool, IconBuildingStore, IconBook, IconTemplate, IconLogout, IconChevronDown, IconMenu, IconX, IconShare } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { generatePortfolioUrl } from "@/lib/utils/portfolio-url"
@@ -21,8 +23,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, loading, signOut } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const queryClient = useQueryClient()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // Get dashboard data including profile for portfolio URL generation
+  const { data } = useDashboardData()
 
   // Collapse sidebar on mobile by default
   useEffect(() => {
@@ -50,15 +56,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const handleLogout = async () => {
     try {
+      // Show loading state
+      toast.loading("Signing out...", { id: "logout" })
+
       const { error } = await signOut()
       if (error) {
-        toast.error("Error signing out")
-      } else {
-        toast.success("Signed out successfully")
-        router.push("/")
+        toast.error("Error signing out", { id: "logout" })
+        console.error("Logout error:", error)
+        return
       }
+
+      // Clear all cached data to prevent stale data after logout
+      queryClient.clear()
+
+      toast.success("Signed out successfully", { id: "logout" })
+
+      // Force a hard redirect to ensure clean state and prevent any cached navigation
+      setTimeout(() => {
+        window.location.href = "/"
+      }, 500) // Small delay to allow toast to show
+
     } catch (error) {
-      toast.error("Error signing out")
+      toast.error("Error signing out", { id: "logout" })
+      console.error("Logout error:", error)
     }
   }
 
@@ -96,6 +116,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       path: "/dashboard/experience",
     },
     {
+      icon: <IconBook size={16} />,
+      name: "Blog Posts",
+      path: "/dashboard/blogs",
+    },
+    {
       icon: <IconTemplate size={16} />,
       name: "Templates",
       path: "/dashboard/templates",
@@ -112,6 +137,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (path === "/dashboard/projects") return "Projects"
     if (path === "/dashboard/education") return "Education"
     if (path === "/dashboard/experience") return "Experience"
+    if (path === "/dashboard/blogs") return "Blog Posts"
     if (path === "/dashboard/templates") return "Templates"
     return "Dashboard"
   }
@@ -206,7 +232,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     variant="link"
                     size="sm"
                     className="w-full justify-center text-xs font-normal rounded-lg py-2 h-8 text-muted-foreground hover:bg-accent hover:text-accent-foreground mt-1 cursor-pointer"
-                    onClick={() => router.push(generatePortfolioUrl(user))}
+                    onClick={() => router.push(generatePortfolioUrl(user, data?.profile))}
                   >
                     <IconShare size={16} className="mr-2" />
                     View Public Portfolio
@@ -295,7 +321,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   variant="link"
                   size="sm"
                   className="w-full flex items-center gap-2 justify-start rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200 mb-1 cursor-pointer"
-                    onClick={() => router.push(generatePortfolioUrl(user))}
+                    onClick={() => router.push(generatePortfolioUrl(user, data?.profile))}
                 >
                   <IconShare size={14} />
                   View Public Portfolio

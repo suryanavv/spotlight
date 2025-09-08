@@ -274,4 +274,49 @@ export function ProfileSettingsSkeleton() {
       </Card>
     </div>
   )
+}
+
+// Blog page skeleton
+export function BlogSkeleton() {
+  return (
+    <div className="space-y-3 sm:space-y-4 mt-16 md:mt-0 pt-4 sm:pt-6 px-2 sm:px-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start justify-between gap-2">
+        <Skeleton className="h-5 sm:h-6 w-20 sm:w-24" />
+        <Skeleton className="h-6 sm:h-7 w-28 sm:w-32 rounded-full" />
+      </div>
+
+      {/* Blog Grid */}
+      <div className="grid grid-cols-1 gap-3 sm:gap-4 pt-2 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index} className="overflow-hidden">
+            <CardHeader className="pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+              <div className="flex items-start justify-between">
+                <Skeleton className="h-4 sm:h-5 w-3/4" />
+                <Skeleton className="h-3.5 sm:h-4 w-3.5 sm:w-4 rounded-full" />
+              </div>
+              <Skeleton className="h-3 sm:h-4 w-full mb-1" />
+              <Skeleton className="h-3 sm:h-4 w-2/3" />
+            </CardHeader>
+
+            <CardContent className="px-3 sm:px-6">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Skeleton className="h-2.5 sm:h-3 w-24 sm:w-28" />
+                <Skeleton className="h-2.5 sm:h-3 w-20 sm:w-24" />
+                <div className="flex items-center gap-2 mt-2">
+                  <Skeleton className="h-3 sm:h-4 w-12 sm:w-16 rounded-full" />
+                </div>
+              </div>
+            </CardContent>
+
+            {/* Footer with buttons */}
+            <div className="flex gap-2 border-t border-border p-2 sm:p-3">
+              <Skeleton className="h-6 sm:h-7 flex-1 rounded-full" />
+              <Skeleton className="h-6 sm:h-7 flex-1 rounded-full" />
+            </div>
+          </Card>
+        ))}
+      </div>
+    </div>
+  )
 } 

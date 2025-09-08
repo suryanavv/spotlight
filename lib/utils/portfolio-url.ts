@@ -13,13 +13,13 @@ type User = {
 
 // Utility function to generate portfolio URLs
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function generatePortfolioUrl(user: any, profile?: Profile): string {
+export function generatePortfolioUrl(user: any, profile?: Profile | null): string {
   // Handle null user
   if (!user) {
     return '/unknown';
   }
 
-  // If user has a username set, use that
+  // If profile is provided and has a username, use that
   if (profile?.username) {
     return `/${profile.username}`;
   }
@@ -27,6 +27,16 @@ export function generatePortfolioUrl(user: any, profile?: Profile): string {
   // Otherwise, create a slug from the user's full name
   if (user?.user_metadata?.full_name) {
     return `/${user.user_metadata.full_name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .trim()}`; // Trim whitespace
+  }
+
+  // If profile is provided but no username, try to use profile's full_name as fallback
+  if (profile?.full_name) {
+    return `/${profile.full_name
       .toLowerCase()
       .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
       .replace(/\s+/g, '-') // Replace spaces with hyphens

@@ -221,9 +221,8 @@ const Index = () => {
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button
                   onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
-                  size="lg"
                   variant="default"
-                  className="rounded-full cursor-pointer"
+                  className="mx-4 text-sm rounded-full cursor-pointer"
                 >
                   {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
                   <span className="ml-2">✦</span>
@@ -299,15 +298,14 @@ const Index = () => {
               <p className="mb-10 text-base text-muted-foreground max-w-lg mx-auto">
                 Join thousands of professionals who use Spotlight to share their portfolios and advance their careers.
               </p>
-              <Button
-                onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
-                variant="default"
-                size="lg"
-                className="rounded-full cursor-pointer"
-              >
-                {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
-                <span className="ml-2">✦</span>
-              </Button>
+                <Button
+                  onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
+                  variant="default"
+                  className="mx-4 text-sm rounded-full cursor-pointer"
+                >
+                  {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
+                  <span className="ml-2">✦</span>
+                </Button>
             </motion.div>
           </div>
         </section>

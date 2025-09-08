@@ -4,7 +4,7 @@ import { useDashboardData } from '@/lib/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { IconShare, IconBriefcase, IconSchool, IconFileText, IconCheck, IconX } from '@tabler/icons-react';
+import { IconShare, IconBriefcase, IconSchool, IconFileText, IconCheck, IconX, IconBook } from '@tabler/icons-react';
 import { motion } from "framer-motion";
 import { OverviewSkeleton } from '@/components/ui/skeletons';
 import { RefreshButton } from '@/components/ui/refresh-button';
@@ -39,7 +39,7 @@ export default function Overview() {
     );
   }
 
-  const { projects = [], education = [], experience = [] } = data || {};
+  const { projects = [], education = [], experience = [], blogs = [] } = data || {};
 
   // Calculate profile completion percentage
   const checklistItems = [
@@ -49,6 +49,7 @@ export default function Overview() {
     { name: "Projects", completed: projects.length > 0 },
     { name: "Education", completed: education.length > 0 },
     { name: "Experience", completed: experience.length > 0 },
+    { name: "Blog Posts", completed: blogs.length > 0 },
   ];
 
   const completedItems = checklistItems.filter((item) => item.completed).length;
@@ -64,7 +65,7 @@ export default function Overview() {
       </div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-border">
         <Button
-          onClick={() => router.push(generatePortfolioUrl(user))}
+          onClick={() => router.push(generatePortfolioUrl(user, data?.profile))}
           variant="secondary"
           size="sm"
           className="flex items-center text-xs rounded-full border-border hover:bg-accent hover:text-accent-foreground"
@@ -75,7 +76,7 @@ export default function Overview() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
         {[
           {
             title: "Projects",
@@ -97,6 +98,13 @@ export default function Overview() {
             icon: <IconBriefcase size={18} className="text-primary" />,
             path: "/dashboard/experience",
             description: "Work history and professional experience"
+          },
+          {
+            title: "Blog Posts",
+            count: blogs.length,
+            icon: <IconBook size={18} className="text-primary" />,
+            path: "/dashboard/blogs",
+            description: "Write and share your thoughts and insights"
           },
         ].map((stat, index) => (
           <motion.div
@@ -200,6 +208,8 @@ export default function Overview() {
                           router.push("/dashboard/education");
                         } else if (item.name === "Experience") {
                           router.push("/dashboard/experience");
+                        } else if (item.name === "Blog Posts") {
+                          router.push("/dashboard/blogs");
                         }
                       }}
                     >

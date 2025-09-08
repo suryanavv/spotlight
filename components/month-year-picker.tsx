@@ -79,7 +79,7 @@ export function MonthYearPicker({ date, onDateChange, disabled, minDate, maxDate
 
   return (
     <div className="flex gap-2">
-      <Select onValueChange={handleYearChange} value={year ? String(year) : undefined} disabled={disabled}>
+      <Select onValueChange={handleYearChange} value={year} disabled={disabled}>
         <SelectTrigger className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black">
           <SelectValue placeholder="Year" />
         </SelectTrigger>
@@ -105,7 +105,7 @@ export function MonthYearPicker({ date, onDateChange, disabled, minDate, maxDate
           })}
         </SelectContent>
       </Select>
-      <Select onValueChange={handleMonthChange} value={month} disabled={disabled}>
+      <Select onValueChange={handleMonthChange} value={month || undefined} disabled={disabled}>
         <SelectTrigger className="h-9 rounded-md border-gray-200 text-sm focus:border-black focus:ring-black">
           <SelectValue placeholder="Month" />
         </SelectTrigger>
