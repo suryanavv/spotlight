@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, Project, Education, Experience, Blog } from "@/types/database";
 import NotFound from "app/not-found";
-import { PortfolioTemplate } from "@/components/portfolio-templates";
+import { PortfolioTemplate } from "@/components/portfolio/templates";
 
 export default function Portfolio() {
   const { username } = useParams<{ username: string }>();

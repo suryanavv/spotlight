@@ -8,23 +8,9 @@
 -- 1. BASE TABLES SETUP
 -- =========================================
 
--- Create users table (extends Supabase auth.users)
-CREATE TABLE IF NOT EXISTS public.users (
-  id UUID REFERENCES auth.users(id) PRIMARY KEY,
-  avatar_url TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
-  email TEXT,
-  full_name TEXT,
-  image TEXT,
-  name TEXT,
-  token_identifier TEXT NOT NULL,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
-  user_id UUID
-);
-
--- Create user_profiles table
+-- Create user_profiles table (extends Supabase auth.users)
 CREATE TABLE IF NOT EXISTS public.user_profiles (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
   avatar_url TEXT,
   bio TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
@@ -36,13 +22,15 @@ CREATE TABLE IF NOT EXISTS public.user_profiles (
   selected_template TEXT,
   twitter TEXT,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
-  website TEXT
+  website TEXT,
+  username TEXT UNIQUE
 );
 
 -- Create education table
 CREATE TABLE IF NOT EXISTS public.education (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+  current_education BOOLEAN DEFAULT false,
   degree TEXT NOT NULL,
   description TEXT,
   end_date DATE,
@@ -116,20 +104,14 @@ CREATE INDEX IF NOT EXISTS idx_blogs_published ON public.blogs(published);
 -- 4. CONSTRAINTS
 -- =========================================
 
--- Add username field and constraints to user_profiles
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'user_profiles' AND column_name = 'username') THEN
-    ALTER TABLE public.user_profiles ADD COLUMN username TEXT UNIQUE;
-    ALTER TABLE public.user_profiles ADD CONSTRAINT username_not_empty CHECK (username IS NULL OR length(trim(username)) > 0);
-  END IF;
-END $$;
+-- Add username constraint to ensure it's not empty when provided
+ALTER TABLE public.user_profiles DROP CONSTRAINT IF EXISTS username_not_empty;
+ALTER TABLE public.user_profiles ADD CONSTRAINT username_not_empty CHECK (username IS NULL OR length(trim(username)) > 0);
 
 -- =========================================
 -- 5. ENABLE ROW LEVEL SECURITY
 -- =========================================
 
-ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.education ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.experience ENABLE ROW LEVEL SECURITY;
@@ -140,41 +122,43 @@ ALTER TABLE public.blogs ENABLE ROW LEVEL SECURITY;
 -- 6. ROW LEVEL SECURITY POLICIES
 -- =========================================
 
--- Users table policies
-CREATE POLICY "Users can view own profile" ON public.users
-  FOR SELECT USING (auth.uid() = id);
-
-CREATE POLICY "Users can update own profile" ON public.users
-  FOR UPDATE USING (auth.uid() = id);
-
 -- User profiles table policies
+DROP POLICY IF EXISTS "Users can view own profile" ON public.user_profiles;
 CREATE POLICY "Users can view own profile" ON public.user_profiles
   FOR SELECT USING (auth.uid()::text = id::text);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.user_profiles;
 CREATE POLICY "Users can insert own profile" ON public.user_profiles
   FOR INSERT WITH CHECK (auth.uid()::text = id::text);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.user_profiles;
 CREATE POLICY "Users can update own profile" ON public.user_profiles
   FOR UPDATE USING (auth.uid()::text = id::text);
 
 -- Allow public to view profiles for portfolio display
+DROP POLICY IF EXISTS "Public can view profiles for portfolios" ON public.user_profiles;
 CREATE POLICY "Public can view profiles for portfolios" ON public.user_profiles
   FOR SELECT USING (username IS NOT NULL AND trim(username) != '');
 
 -- Education table policies
+DROP POLICY IF EXISTS "Users can view own education" ON public.education;
 CREATE POLICY "Users can view own education" ON public.education
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own education" ON public.education;
 CREATE POLICY "Users can insert own education" ON public.education
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own education" ON public.education;
 CREATE POLICY "Users can update own education" ON public.education
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own education" ON public.education;
 CREATE POLICY "Users can delete own education" ON public.education
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Public access policy for education table
+DROP POLICY IF EXISTS "Public can view education for portfolios" ON public.education;
 CREATE POLICY "Public can view education for portfolios" ON public.education
   FOR SELECT USING (
     EXISTS (
@@ -186,19 +170,24 @@ CREATE POLICY "Public can view education for portfolios" ON public.education
   );
 
 -- Experience table policies
+DROP POLICY IF EXISTS "Users can view own experience" ON public.experience;
 CREATE POLICY "Users can view own experience" ON public.experience
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own experience" ON public.experience;
 CREATE POLICY "Users can insert own experience" ON public.experience
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own experience" ON public.experience;
 CREATE POLICY "Users can update own experience" ON public.experience
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own experience" ON public.experience;
 CREATE POLICY "Users can delete own experience" ON public.experience
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Public access policy for experience table
+DROP POLICY IF EXISTS "Public can view experience for portfolios" ON public.experience;
 CREATE POLICY "Public can view experience for portfolios" ON public.experience
   FOR SELECT USING (
     EXISTS (
@@ -210,19 +199,24 @@ CREATE POLICY "Public can view experience for portfolios" ON public.experience
   );
 
 -- Projects table policies
+DROP POLICY IF EXISTS "Users can view own projects" ON public.projects;
 CREATE POLICY "Users can view own projects" ON public.projects
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own projects" ON public.projects;
 CREATE POLICY "Users can insert own projects" ON public.projects
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own projects" ON public.projects;
 CREATE POLICY "Users can update own projects" ON public.projects
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own projects" ON public.projects;
 CREATE POLICY "Users can delete own projects" ON public.projects
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Public access policy for projects table
+DROP POLICY IF EXISTS "Public can view projects for portfolios" ON public.projects;
 CREATE POLICY "Public can view projects for portfolios" ON public.projects
   FOR SELECT USING (
     EXISTS (
@@ -234,19 +228,24 @@ CREATE POLICY "Public can view projects for portfolios" ON public.projects
   );
 
 -- Blogs table policies
+DROP POLICY IF EXISTS "Users can view own blogs" ON public.blogs;
 CREATE POLICY "Users can view own blogs" ON public.blogs
   FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own blogs" ON public.blogs;
 CREATE POLICY "Users can insert own blogs" ON public.blogs
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update own blogs" ON public.blogs;
 CREATE POLICY "Users can update own blogs" ON public.blogs
   FOR UPDATE USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own blogs" ON public.blogs;
 CREATE POLICY "Users can delete own blogs" ON public.blogs
   FOR DELETE USING (auth.uid() = user_id);
 
 -- Public access policy for published blogs in portfolios
+DROP POLICY IF EXISTS "Public can view published blogs for portfolios" ON public.blogs;
 CREATE POLICY "Public can view published blogs for portfolios" ON public.blogs
   FOR SELECT USING (
     published = true AND
@@ -266,15 +265,6 @@ CREATE POLICY "Public can view published blogs for portfolios" ON public.blogs
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.users (id, email, full_name, avatar_url, token_identifier)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    NEW.raw_user_meta_data->>'avatar_url',
-    NEW.id::text
-  );
-
   INSERT INTO public.user_profiles (id, full_name, avatar_url)
   VALUES (
     NEW.id,
@@ -347,35 +337,35 @@ VALUES ('portfolio', 'portfolio', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Allow authenticated users to upload files
+DROP POLICY IF EXISTS "Allow authenticated users to upload files" ON storage.objects;
 CREATE POLICY "Allow authenticated users to upload files" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'portfolio'
   AND auth.role() = 'authenticated'
-)
-ON CONFLICT (schemaname, tablename, policyname) DO NOTHING;
+);
 
 -- Allow authenticated users to update their own files
+DROP POLICY IF EXISTS "Allow authenticated users to update their files" ON storage.objects;
 CREATE POLICY "Allow authenticated users to update their files" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'portfolio'
   AND auth.role() = 'authenticated'
   AND (storage.foldername(name))[1] = auth.uid()::text
-)
-ON CONFLICT (schemaname, tablename, policyname) DO NOTHING;
+);
 
 -- Allow authenticated users to delete their own files
+DROP POLICY IF EXISTS "Allow authenticated users to delete their files" ON storage.objects;
 CREATE POLICY "Allow authenticated users to delete their files" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'portfolio'
   AND auth.role() = 'authenticated'
   AND (storage.foldername(name))[1] = auth.uid()::text
-)
-ON CONFLICT (schemaname, tablename, policyname) DO NOTHING;
+);
 
 -- Allow public access to view files (needed for displaying images)
+DROP POLICY IF EXISTS "Allow public access to view files" ON storage.objects;
 CREATE POLICY "Allow public access to view files" ON storage.objects
-FOR SELECT USING (bucket_id = 'portfolio')
-ON CONFLICT (schemaname, tablename, policyname) DO NOTHING;
+FOR SELECT USING (bucket_id = 'portfolio');
 
 -- =========================================
 -- SETUP COMPLETE
@@ -385,7 +375,7 @@ ON CONFLICT (schemaname, tablename, policyname) DO NOTHING;
 -- supabase db push (if you have the Supabase CLI installed)
 --
 -- The schema includes:
--- ✅ Users and user profiles management
+-- ✅ User profiles extending Supabase auth.users
 -- ✅ Education, experience, and projects tracking
 -- ✅ Blog system with MDX support
 -- ✅ File storage for avatars and project images
