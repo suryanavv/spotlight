@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase } from './client'
 import { toast } from 'sonner'
 
 interface AuthContextType {
@@ -39,7 +39,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (error) {
           console.error('Error getting session:', error)
           if (mounted) {
-            toast.error('Failed to load authentication session')
+            setSession(null)
+            setUser(null)
           }
         } else if (mounted) {
           setSession(session)
@@ -48,7 +49,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Unexpected error getting session:', error)
         if (mounted) {
-          toast.error('An unexpected error occurred while loading your session')
+          setSession(null)
+          setUser(null)
         }
       } finally {
         if (mounted) {
@@ -82,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             toast.success('Successfully signed out!')
             break
           case 'TOKEN_REFRESHED':
-            console.log('Session token refreshed')
+            // Silent refresh, no toast needed
             break
           case 'USER_UPDATED':
             toast.success('Profile updated successfully!')
@@ -249,4 +251,5 @@ export function useUser() {
 export function useSession() {
   const { session, loading } = useAuth()
   return { session, isLoaded: !loading }
-} 
+}
+

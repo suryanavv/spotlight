@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { useAuth } from '@/components/providers/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/supabase/auth';
+import { supabase } from '@/supabase/client';
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -52,8 +52,8 @@ export default function Templates() {
   useEffect(() => {
     // Fetch current template from profile
     const fetchTemplate = async () => {
-      if (!user) return;
-      
+      if (!user || !supabase) return;
+
       try {
         const { data: profile } = await supabase
           .from('user_profiles')
@@ -78,7 +78,7 @@ export default function Templates() {
   }
 
   const handleTemplateSelect = async (templateId: string) => {
-    if (!user) return;
+    if (!user || !supabase) return;
     if (templateId === selectedTemplate) return;
 
     setLoading(true);

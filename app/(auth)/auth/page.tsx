@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState, Suspense } from "react"
-import { useAuth } from '@/components/providers/AuthProvider'
+import { useAuth } from '@/supabase/auth'
 import { toast } from "sonner"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"

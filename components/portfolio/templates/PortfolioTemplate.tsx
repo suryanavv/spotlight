@@ -1,4 +1,5 @@
-import { Profile, Project, Education, Experience, Blog } from "@/types/database";
+"use client"
+import { Profile, Project, Education, Experience, Blog } from "@/supabase/types";
 import { MinimalTemplate } from "./MinimalTemplate";
 import { ModernTemplate } from "./ModernTemplate";
 import { CreativeTemplate } from "./CreativeTemplate";

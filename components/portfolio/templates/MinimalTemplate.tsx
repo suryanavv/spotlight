@@ -1,4 +1,5 @@
-import { Profile, Project, Education, Experience, Blog } from "@/types/database";
+"use client"
+import { Profile, Project, Education, Experience, Blog } from "@/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

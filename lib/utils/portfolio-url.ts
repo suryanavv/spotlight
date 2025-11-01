@@ -1,5 +1,5 @@
 // Import the Profile type from database types
-import type { Profile } from "@/types/database";
+import type { Profile } from "@/supabase/types";
 
 // Types for user object - compatible with Supabase User type
 type User = {

@@ -1,7 +1,10 @@
+"use client"
+
 import { Button } from "./button"
 import { RefreshCw } from "lucide-react"
-import { useDashboardData } from "@/lib/hooks/useQueries"
+import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { useState } from "react"
 
 interface RefreshButtonProps {
   className?: string
@@ -14,11 +17,14 @@ export function RefreshButton({
   size = "sm",
   variant = "outline"
 }: RefreshButtonProps) {
-  const { refresh, isLoading } = useDashboardData()
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleRefresh = () => {
-    refresh()
+    setIsLoading(true)
     toast.success("Refreshing data...")
+    router.refresh()
+    setTimeout(() => setIsLoading(false), 500)
   }
 
   return (

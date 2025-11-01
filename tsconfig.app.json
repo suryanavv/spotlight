@@ -27,5 +27,5 @@
     },
     "composite": true
   },
-  "include": ["app", "components", "hooks", "lib", "integrations", "types"]
+  "include": ["app", "components", "hooks", "lib", "integrations", "types", "supabase",]
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { supabase } from '@/integrations/supabase/client'
-import { Profile, Blog } from "@/types/database"
+import { supabase } from '@/supabase/client'
+import { Profile, Blog } from "@/supabase/types"
 import NotFound from "app/not-found"
 import { BlogContent } from "@/components/ui/blog-content"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,10 @@ export default function BlogPost() {
       try {
         setLoading(true)
         setError(null)
+
+        if (!supabase) {
+          throw new Error("Database connection not available")
+        }
 
         // Fetch profile by username first
         const { data: profileData, error: profileError } = await supabase

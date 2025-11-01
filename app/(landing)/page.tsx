@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
-import { useAuth } from '@/components/providers/AuthProvider'
+import { useAuth } from '@/supabase/auth'
 import { motion } from "framer-motion"
 import { Share2, LayoutDashboard, User, LogOut, Check } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"

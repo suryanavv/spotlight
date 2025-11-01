@@ -1,8 +1,7 @@
 import './globals.css';
 import type { ReactNode } from 'react';
 import { Toaster } from 'sonner';
-import { QueryProvider } from '@/components/providers/QueryProvider';
-import { AuthProvider } from '@/components/providers/AuthProvider';
+import { AuthProvider } from '@/supabase/auth';
 
 export const metadata = {
   title: 'Spotlight',
@@ -17,10 +16,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body>
         <AuthProvider>
-          <QueryProvider>
-            <Toaster />
-            {children}
-          </QueryProvider>
+          <Toaster />
+          {children}
         </AuthProvider>
       </body>
     </html>
