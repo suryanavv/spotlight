@@ -129,7 +129,7 @@ const DashboardSidebar = memo(function DashboardSidebar({ initialData }: { initi
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-2 group text-left focus:outline-none"
-          style={{ fontFamily: 'Inter, sans-serif' }}
+          style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
         >
           <span>✦</span>
           <span className="text-md font-semibold tracking-tight text-black group-hover:text-primary transition-colors">Spotlight</span>
@@ -207,7 +207,7 @@ const DashboardMobileHeader = ({ mobileMenuOpen, setMobileMenuOpen }: { mobileMe
         <button
           onClick={() => router.push('/')}
           className="flex items-center gap-2 min-w-0 group text-left focus:outline-none"
-          style={{ fontFamily: 'Inter, sans-serif' }}
+          style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}
         >
           <span>✦</span>
           <span className="text-md font-semibold tracking-tight text-foreground group-hover:text-primary select-none">Spotlight</span>

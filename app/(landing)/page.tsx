@@ -219,10 +219,10 @@ const HeroSection = () => {
             <Button
               onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
               variant="default"
-              className="mx-4 text-sm rounded-full cursor-pointer"
+              className="text-sm rounded-full cursor-pointer"
             >
-              {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
-              <span className="ml-2">✦</span>
+              {user ? "Dashboard" : "Get Started"}
+              <span className="ml-1">→</span>
             </Button>
           </div>
         </motion.div>
@@ -332,10 +332,10 @@ const CtaSection = () => {
           <Button
             onClick={() => user ? router.push('/dashboard') : navigateToAuth('signup')}
             variant="default"
-            className="mx-4 text-sm rounded-full cursor-pointer"
+            className="text-sm rounded-full cursor-pointer"
           >
-            {user ? "Shine On in Dashboard" : "Spark Your Spotlight! "}
-            <span className="ml-2">✦</span>
+            {user ? "Dashboard" : "Get Started →"}
+            <span className="ml-1">→</span>
           </Button>
         </motion.div>
       </div>
