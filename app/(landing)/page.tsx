@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link";
+import React from "react"
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button"
 import { useAuth } from '@/supabase/auth'
@@ -26,6 +27,11 @@ const AnnouncementBanner = () => {
     router.push(`/auth?mode=${mode}`)
   }
 
+  // Prefetch auth page on component mount
+  React.useEffect(() => {
+    router.prefetch('/auth')
+  }, [router])
+
   return (
     <div className="bg-primary py-2 text-center text-xs text-primary-foreground">
       <span className="inline-flex items-center">
@@ -47,6 +53,11 @@ const AnnouncementBanner = () => {
 const LandingHeader = () => {
   const { user, signOut } = useAuth()
   const router = useRouter()
+
+  // Prefetch auth page on component mount
+  React.useEffect(() => {
+    router.prefetch('/auth')
+  }, [router])
 
   const navigateToAuth = (mode: 'signin' | 'signup') => {
     router.push(`/auth?mode=${mode}`)
@@ -181,6 +192,11 @@ const HeroSection = () => {
     router.push(`/auth?mode=${mode}`)
   }
 
+  // Prefetch auth page on component mount
+  React.useEffect(() => {
+    router.prefetch('/auth')
+  }, [router])
+
   return (
     <section className="relative overflow-hidden py-24 md:py-36">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,rgba(var(--ring-rgb),0.08),transparent)]"></div>
@@ -311,6 +327,11 @@ const CtaSection = () => {
     router.push(`/auth?mode=${mode}`)
   }
 
+  // Prefetch auth page on component mount
+  React.useEffect(() => {
+    router.prefetch('/auth')
+  }, [router])
+
   return (
     <section className="py-6 md:py-10 relative overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(var(--ring-rgb),0.03),transparent)]"></div>
@@ -334,7 +355,7 @@ const CtaSection = () => {
             variant="default"
             className="text-sm rounded-full cursor-pointer"
           >
-            {user ? "Dashboard" : "Get Started →"}
+            {user ? "Dashboard" : "Get Started"}
             <span className="ml-1">→</span>
           </Button>
         </motion.div>

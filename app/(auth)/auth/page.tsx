@@ -339,7 +339,21 @@ function AuthPageContent() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex flex-col justify-center py-8 px-4 sm:px-6">
+        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+          <div className="text-center space-y-1.5">
+            <div className="flex justify-center mb-3">
+              <span className="text-primary text-lg">✦</span>
+            </div>
+            <div className="animate-pulse">
+              <div className="h-6 bg-muted rounded w-48 mx-auto mb-2"></div>
+              <div className="h-4 bg-muted rounded w-64 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
       <AuthPageContent />
     </Suspense>
   )

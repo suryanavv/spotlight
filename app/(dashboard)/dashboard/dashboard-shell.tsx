@@ -36,10 +36,11 @@ const DashboardSidebar = memo(function DashboardSidebar({ initialData }: { initi
   const router = useRouter()
   const pathname = usePathname()
 
-  // Prefetch components on hover for better performance
+  // Prefetch components on hover for better performance (templates page doesn't need component prefetching)
   const prefetchComponent = useCallback((path: string) => {
     switch (path) {
       case '/dashboard':
+      case '/dashboard/overview':
         dynamic(() => import('@/components/dashboard/overview-client'), { ssr: false })
         break
       case '/dashboard/profile-settings':
@@ -57,6 +58,7 @@ const DashboardSidebar = memo(function DashboardSidebar({ initialData }: { initi
       case '/dashboard/blogs':
         dynamic(() => import('@/components/dashboard/blogs-client'), { ssr: false })
         break
+      // Templates page doesn't use a client component, so no prefetch needed
     }
   }, [])
 
@@ -251,10 +253,11 @@ const DashboardMobileMenu = memo(function DashboardMobileMenu({ mobileMenuOpen, 
   const router = useRouter()
   const pathname = usePathname()
 
-  // Prefetch components on hover for better performance
+  // Prefetch components on hover for better performance (templates page doesn't need component prefetching)
   const prefetchComponent = useCallback((path: string) => {
     switch (path) {
       case '/dashboard':
+      case '/dashboard/overview':
         dynamic(() => import('@/components/dashboard/overview-client'), { ssr: false })
         break
       case '/dashboard/profile-settings':
@@ -272,6 +275,7 @@ const DashboardMobileMenu = memo(function DashboardMobileMenu({ mobileMenuOpen, 
       case '/dashboard/blogs':
         dynamic(() => import('@/components/dashboard/blogs-client'), { ssr: false })
         break
+      // Templates page doesn't use a client component, so no prefetch needed
     }
   }, [])
 
@@ -458,8 +462,49 @@ const DashboardShellComponent = function DashboardShell({
     preloadData()
   }, [])
 
-
   const router = useRouter()
+
+  // Prefetch all dashboard routes and components for instant navigation
+  useEffect(() => {
+    const prefetchAllPages = async () => {
+      // Only prefetch after dashboard data is loaded to avoid conflicts
+      if (!dataLoading && dashboardData) {
+        try {
+          // Prefetch all routes using Next.js router.prefetch()
+          const dashboardRoutes = [
+            '/dashboard/overview',
+            '/dashboard/profile-settings',
+            '/dashboard/projects',
+            '/dashboard/education',
+            '/dashboard/experience',
+            '/dashboard/blogs',
+            '/dashboard/templates'
+          ]
+
+          // Prefetch routes in parallel
+          await Promise.all(
+            dashboardRoutes.map(route => router.prefetch(route))
+          )
+
+          // Prefetch all components dynamically for instant loading
+          await Promise.all([
+            import('@/components/dashboard/overview-client'),
+            import('@/components/dashboard/profile-settings-client'),
+            import('@/components/dashboard/projects-client'),
+            import('@/components/dashboard/education-client'),
+            import('@/components/dashboard/experience-client'),
+            import('@/components/dashboard/blogs-client')
+          ])
+
+        } catch (error) {
+          console.warn('[DashboardShell] Error prefetching pages:', error)
+          // Don't fail the app if prefetching fails
+        }
+      }
+    }
+
+    prefetchAllPages()
+  }, [dataLoading, dashboardData, router])
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 

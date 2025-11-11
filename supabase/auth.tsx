@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [initialized, setInitialized] = useState(false)
   const lastSignInToastRef = useRef<number>(0)
   const mountedRef = useRef(true)
 
@@ -55,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } finally {
         if (mounted) {
           setLoading(false)
+          setInitialized(true)
         }
       }
     }
